@@ -73,7 +73,9 @@ def main():
     serve_parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
     serve_parser.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
     serve_parser.add_argument(
-        "--wallet", default="", help="EVM wallet address for receiving x402 payments"
+        "--wallet",
+        default=os.environ.get("EFFICIENT_WALLET", ""),
+        help="EVM wallet address for receiving x402 payments (default: $EFFICIENT_WALLET)",
     )
     serve_parser.add_argument(
         "--network", default="eip155:8453", help="CAIP-2 network (default: Base mainnet)"
