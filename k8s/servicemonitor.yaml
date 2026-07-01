@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: efficient-ai-proxy
+  labels:
+    app: efficient-ai-proxy
+spec:
+  selector:
+    matchLabels:
+      app: efficient-ai-proxy
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s

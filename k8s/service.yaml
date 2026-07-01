@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: efficient-ai-proxy
+  labels:
+    app: efficient-ai-proxy
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: efficient-ai-proxy

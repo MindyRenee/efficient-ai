@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: efficient-ai-proxy
+  labels:
+    app: efficient-ai-proxy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: efficient-ai-proxy
+  template:
+    metadata:
+      labels:
+        app: efficient-ai-proxy
+    spec:
+      containers:
+      - name: proxy
+        image: efficient-ai:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: EFFICIENT_WALLET
+          valueFrom:
+            secretKeyRef:
+              name: efficient-ai-secrets
+              key: wallet-address
+        - name: EFFICIENT_NETWORK
+          value: "eip155:8453"
+        - name: EFFICIENT_FACILITATOR_URL
+          value: "https://x402.org/facilitator"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
