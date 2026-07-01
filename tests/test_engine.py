@@ -3,13 +3,27 @@ Tests for the LocalEngine — embedded deterministic text processing.
 """
 
 import pytest
+
 from efficient.local_engine import (
-    LocalEngine, EngineResponse,
-    _summarize_extractive, _classify_sentiment, _classify_category,
-    _classify_spam, _extract_entities, _simple_qa, _try_arithmetic,
-    _try_unit_conversion, _try_definition, _generate_code,
-    _simplify_text, _expand_text, _change_tone, _extract_keywords,
-    _to_json, _solve_algebra, _translate, _parse_file_summary,
+    LocalEngine,
+    _change_tone,
+    _classify_category,
+    _classify_sentiment,
+    _classify_spam,
+    _expand_text,
+    _extract_entities,
+    _extract_keywords,
+    _generate_code,
+    _parse_file_summary,
+    _simple_qa,
+    _simplify_text,
+    _solve_algebra,
+    _summarize_extractive,
+    _to_json,
+    _translate,
+    _try_arithmetic,
+    _try_definition,
+    _try_unit_conversion,
 )
 
 

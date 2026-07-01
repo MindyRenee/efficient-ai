@@ -4,13 +4,15 @@ Tests for the main Client — integration tests for the orchestration layer.
 These tests use mock backends to avoid requiring Ollama or cloud API keys.
 """
 
+from typing import Any
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-from efficient.client import Client, ChatResponse
-from efficient.config import Config, GPUInfo, OllamaInfo, CloudKeys
-from efficient.models import ModelInfo, CapabilityTier
-from efficient.backends import GenerateResponse, Backend
-from efficient.router import RoutingDecision
+
+from efficient.backends import Backend, GenerateResponse
+from efficient.client import ChatResponse, Client
+from efficient.config import CloudKeys, Config, GPUInfo, OllamaInfo
+from efficient.models import ModelInfo
 
 
 class MockBackend(Backend):
@@ -19,12 +21,22 @@ class MockBackend(Backend):
     def __init__(self, provider: str = "ollama", available: bool = True):
         self._provider = provider
         self._available = available
-        self.calls = []
+        self.calls: list[dict[str, Any]] = []
 
     def is_available(self) -> bool:
         return self._available
 
-    def chat(self, model, messages, **kwargs) -> GenerateResponse:
+    def chat(
+        self,
+        model: ModelInfo,
+        messages: list[dict],
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+        stream: bool = False,
+        tools: list[dict] | None = None,
+        response_format: dict | None = None,
+        **kwargs,
+    ) -> GenerateResponse:
         self.calls.append({"model": model.name, "messages": messages})
         return GenerateResponse(
             content=f"Mock response from {model.name}",
@@ -36,8 +48,8 @@ class MockBackend(Backend):
         )
 
     def stream_chat(self, model, messages, **kwargs):
-        yield f"Mock "
-        yield f"stream "
+        yield "Mock "
+        yield "stream "
         yield f"from {model.name}"
 
 

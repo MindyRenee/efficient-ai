@@ -2,10 +2,9 @@
 Tests for the config module — auto-detection and persistence.
 """
 
-import json
-import pytest
 from pathlib import Path
-from efficient.config import Config, GPUInfo, OllamaInfo, CloudKeys
+
+from efficient.config import CloudKeys, Config, GPUInfo, OllamaInfo
 
 
 class TestConfig:

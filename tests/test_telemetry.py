@@ -2,9 +2,9 @@
 Tests for the telemetry module.
 """
 
-import time
 import pytest
-from efficient.telemetry import Telemetry, RequestRecord
+
+from efficient.telemetry import RequestRecord, Telemetry
 
 
 @pytest.fixture

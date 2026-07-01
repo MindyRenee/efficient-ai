@@ -177,7 +177,7 @@ class TestProxyPaymentFlow:
             "messages": [{"role": "user", "content": "What is 2 + 2?"}],
         })
         assert resp.status_code == 402
-        assert "payment-required" in {k.lower() for k in resp.headers.keys()}
+        assert "payment-required" in {k.lower() for k in resp.headers}
         assert "x-price" in resp.headers
         assert "x-tier" in resp.headers
 

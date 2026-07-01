@@ -2,11 +2,14 @@
 Tests for the router module — intent classification, complexity, and model selection.
 """
 
-import pytest
-from efficient.router import (
-    classify_intent, estimate_complexity, min_tier_for, select_model, Router,
-)
 from efficient.models import CapabilityTier
+from efficient.router import (
+    Router,
+    classify_intent,
+    estimate_complexity,
+    min_tier_for,
+    select_model,
+)
 
 
 class TestIntentClassification:

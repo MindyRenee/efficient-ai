@@ -35,10 +35,12 @@ Usage:
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import os
 import time
 import uuid
+from typing import Any
 
 # Pricing tiers (in USD per request)
 PRICING = {
@@ -49,33 +51,33 @@ PRICING = {
 
 # Optional Prometheus metrics (no-op fallback if not installed)
 try:
-    from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+    from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
-    REQUEST_COUNT = Counter(
+    REQUEST_COUNT: Any = Counter(
         'efficient_requests_total',
         'Total number of requests',
         ['tier', 'status']
     )
-    REQUEST_LATENCY = Histogram(
+    REQUEST_LATENCY: Any = Histogram(
         'efficient_request_latency_seconds',
         'Request latency in seconds',
         ['tier']
     )
-    CACHE_HIT_RATE = Gauge(
+    CACHE_HIT_RATE: Any = Gauge(
         'efficient_cache_hit_rate',
         'Cache hit rate percentage'
     )
-    BACKEND_DISTRIBUTION = Counter(
+    BACKEND_DISTRIBUTION: Any = Counter(
         'efficient_backend_requests_total',
         'Total requests per backend',
         ['backend']
     )
-    PAYMENT_VERIFICATION_COUNT = Counter(
+    PAYMENT_VERIFICATION_COUNT: Any = Counter(
         'efficient_payment_verifications_total',
         'Total payment verifications',
         ['status']
     )
-    ACTIVE_REQUESTS = Gauge(
+    ACTIVE_REQUESTS: Any = Gauge(
         'efficient_active_requests',
         'Number of active requests'
     )
@@ -108,7 +110,9 @@ except ImportError:
     BACKEND_DISTRIBUTION = _NoOpMetric()
     PAYMENT_VERIFICATION_COUNT = _NoOpMetric()
     ACTIVE_REQUESTS = _NoOpMetric()
-    generate_latest = lambda: b""
+    def generate_latest(registry: Any = None, escaping: str = "underscore") -> bytes:  # type: ignore[misc]
+        return b""
+
     CONTENT_TYPE_LATEST = "text/plain; charset=utf-8"
 
 # Default configuration
@@ -146,8 +150,8 @@ def create_app(
     try:
         from fastapi import FastAPI, Request
         from fastapi.responses import JSONResponse, Response
-        from starlette.background import BackgroundTask
         from pydantic import BaseModel
+        from starlette.background import BackgroundTask
     except ImportError as err:
         raise ImportError(
             "FastAPI not installed. Install with: pip install fastapi uvicorn",
@@ -230,7 +234,7 @@ def create_app(
             decoded_bytes = base64.b64decode(payload_b64)
             decoded_str = decoded_bytes.decode()
             decoded = json.loads(decoded_str)
-        except (base64.binascii.Error, UnicodeDecodeError, json.JSONDecodeError) as e:
+        except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError) as e:
             raise ValueError(f"Invalid payment payload: {e}") from e
         if not isinstance(decoded, dict):
             raise ValueError("Payment payload must be a JSON object")
@@ -448,7 +452,7 @@ def create_app(
         # Process the request through Efficient AI
         start_time = time.time()
         ACTIVE_REQUESTS.inc()
-        
+
         try:
             eff_model = "auto" if model in ("auto", "gpt-4o", "gpt-4o-mini", "gpt-4", "gpt-3.5-turbo", "") else model
             response = efficient_client.chat(messages=msg_dicts, model=eff_model, response_format=response_format)
@@ -456,9 +460,10 @@ def create_app(
             # Update cache hit rate if available (using cached telemetry instance)
             if efficient_client.cache and telemetry_instance:
                 try:
-                    stats = telemetry_instance.get_stats()
-                    if stats and "cache_hit_rate" in stats:
-                        CACHE_HIT_RATE.set(stats["cache_hit_rate"] * 100)
+                    stats = telemetry_instance.report(since_hours=1.0)
+                    total = stats.get("total_requests", 0)
+                    if total > 0:
+                        CACHE_HIT_RATE.set(stats.get("cache_hits", 0) / total * 100)
                 except Exception as e:
                     print(f"Error updating cache hit rate: {type(e).__name__}: {e!s}")
 
@@ -479,15 +484,15 @@ def create_app(
                     }
                     yield f"data: {json.dumps(final_chunk)}\n\n"
                     yield "data: [DONE]\n\n"
-                
+
                 from fastapi.responses import StreamingResponse
-                
+
                 # Record metrics after streaming completes using background task
                 def record_streaming_metrics():
                     REQUEST_COUNT.labels(tier=tier, status="success").inc()
                     BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
                     REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
-                
+
                 return StreamingResponse(
                     stream_generator(),
                     media_type="text/event-stream",
@@ -499,7 +504,7 @@ def create_app(
             REQUEST_COUNT.labels(tier=tier, status="success").inc()
             BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
             REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
-            
+
             result = _make_chat_completion(content=response.content, model=response.model, input_tokens=response.input_tokens, output_tokens=response.output_tokens)
             return JSONResponse(content=result, headers={"X-Tier": response.provider, "X-Price": f"${price:.4f}", "X-Model": response.model, "X-Latency-ms": f"{response.latency_ms:.1f}"})
         except Exception as e:

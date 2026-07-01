@@ -2,9 +2,8 @@
 Tests for the semantic cache module.
 """
 
-import os
-import tempfile
 import pytest
+
 from efficient.cache import SemanticCache
 
 

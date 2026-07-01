@@ -3,10 +3,18 @@ Tests for the models registry.
 """
 
 import pytest
+
 from efficient.models import (
-    ModelInfo, CapabilityTier, all_models, local_models, cloud_models,
-    models_by_tier, models_for_provider, get_model, cheapest_model_for_tier,
-    best_local_model_for_vram, estimate_cost,
+    CapabilityTier,
+    all_models,
+    best_local_model_for_vram,
+    cheapest_model_for_tier,
+    cloud_models,
+    estimate_cost,
+    get_model,
+    local_models,
+    models_by_tier,
+    models_for_provider,
 )
 
 
