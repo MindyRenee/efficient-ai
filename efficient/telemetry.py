@@ -26,16 +26,16 @@ class RequestRecord:
 
     timestamp: float = 0.0
     model: str = ""
-    provider: str = ""               # ollama, openai, anthropic, etc.
-    tier: str = ""                   # micro, small, mid, large, frontier
+    provider: str = ""  # ollama, openai, anthropic, etc.
+    tier: str = ""  # micro, small, mid, large, frontier
     input_tokens: int = 0
     output_tokens: int = 0
     actual_cost: float = 0.0
-    frontier_cost: float = 0.0       # What this would have cost on GPT-5/Claude Opus
+    frontier_cost: float = 0.0  # What this would have cost on GPT-5/Claude Opus
     latency_ms: float = 0.0
     cache_hit: bool = False
     local: bool = False
-    intent: str = ""                 # classified intent
+    intent: str = ""  # classified intent
     success: bool = True
     error: str = ""
 
@@ -222,7 +222,8 @@ class Telemetry:
                 "cloud_requests": cloud,
                 "total_input_tokens": row["total_input_tokens"] or 0,
                 "total_output_tokens": row["total_output_tokens"] or 0,
-                "total_tokens": (row["total_input_tokens"] or 0) + (row["total_output_tokens"] or 0),
+                "total_tokens": (row["total_input_tokens"] or 0)
+                + (row["total_output_tokens"] or 0),
                 "total_actual_cost": actual_cost,
                 "total_frontier_cost": frontier_cost,
                 "total_savings": savings,
@@ -241,7 +242,11 @@ class Telemetry:
         if r["total_requests"] == 0:
             return "No requests recorded yet."
 
-        period = f"last {r['period_hours']:.0f}h" if r["period_hours"] < 168 else f"last {r['period_hours']/24:.0f}d"
+        period = (
+            f"last {r['period_hours']:.0f}h"
+            if r["period_hours"] < 168
+            else f"last {r['period_hours'] / 24:.0f}d"
+        )
 
         lines = [
             "",
@@ -250,9 +255,9 @@ class Telemetry:
             f"Period: {period}",
             "",
             f"  Total requests:          {r['total_requests']:,}",
-            f"  Cache hits:              {r['cache_hits']:,} ({r['cache_hits']/r['total_requests']*100:.0f}%)",
-            f"  Local inference:         {r['local_requests']:,} ({r['local_requests']/r['total_requests']*100:.0f}%)",
-            f"  Cloud (fallback):        {r['cloud_requests']:,} ({r['cloud_requests']/r['total_requests']*100:.0f}%)",
+            f"  Cache hits:              {r['cache_hits']:,} ({r['cache_hits'] / r['total_requests'] * 100:.0f}%)",
+            f"  Local inference:         {r['local_requests']:,} ({r['local_requests'] / r['total_requests'] * 100:.0f}%)",
+            f"  Cloud (fallback):        {r['cloud_requests']:,} ({r['cloud_requests'] / r['total_requests'] * 100:.0f}%)",
             "",
             f"  Total tokens:            {r['total_tokens']:,}",
             f"  Avg latency:             {r['avg_latency_ms']:.0f}ms",
@@ -269,7 +274,9 @@ class Telemetry:
 
         for m in r["model_breakdown"][:10]:
             location = "local" if m["local"] else "cloud"
-            lines.append(f"    {m['model']:<35} {m['count']:>5}x  {m['tokens']:>8} tok  ${m['cost']:>8.4f}  [{location}]")
+            lines.append(
+                f"    {m['model']:<35} {m['count']:>5}x  {m['tokens']:>8} tok  ${m['cost']:>8.4f}  [{location}]"
+            )
 
         if r["intent_breakdown"]:
             lines.append("")
@@ -277,7 +284,9 @@ class Telemetry:
             for i in r["intent_breakdown"][:10]:
                 local_pct = (i["local_count"] / i["count"] * 100) if i["count"] > 0 else 0
                 cache_pct = (i["cache_count"] / i["count"] * 100) if i["count"] > 0 else 0
-                lines.append(f"    {i['intent']:<25} {i['count']:>5}x  (local: {local_pct:.0f}%, cached: {cache_pct:.0f}%)")
+                lines.append(
+                    f"    {i['intent']:<25} {i['count']:>5}x  (local: {local_pct:.0f}%, cached: {cache_pct:.0f}%)"
+                )
 
         lines.append("")
         lines.append("=" * 60)

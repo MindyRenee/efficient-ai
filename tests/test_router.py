@@ -14,7 +14,12 @@ from efficient.router import (
 
 class TestIntentClassification:
     def test_classification_intent(self):
-        msgs = [{"role": "user", "content": "Classify the sentiment of this review as positive or negative"}]
+        msgs = [
+            {
+                "role": "user",
+                "content": "Classify the sentiment of this review as positive or negative",
+            }
+        ]
         assert classify_intent(msgs) == "classification"
 
     def test_extraction_intent(self):
@@ -42,7 +47,9 @@ class TestIntentClassification:
         assert classify_intent(msgs) == "structured_generation"
 
     def test_reasoning_intent(self):
-        msgs = [{"role": "user", "content": "Why does the earth orbit the sun? Explain step by step."}]
+        msgs = [
+            {"role": "user", "content": "Why does the earth orbit the sun? Explain step by step."}
+        ]
         assert classify_intent(msgs) == "reasoning"
 
     def test_agentic_intent(self):
@@ -75,7 +82,12 @@ class TestComplexityEstimation:
         assert estimate_complexity(msgs) == "trivial"
 
     def test_simple(self):
-        msgs = [{"role": "user", "content": "What is the capital of France and what river runs through it?"}]
+        msgs = [
+            {
+                "role": "user",
+                "content": "What is the capital of France and what river runs through it?",
+            }
+        ]
         assert estimate_complexity(msgs) == "simple"
 
     def test_moderate(self):
@@ -85,7 +97,11 @@ class TestComplexityEstimation:
     def test_complex(self):
         # Long multi-turn with code
         msgs = [
-            {"role": "user", "content": "First, analyze the code. Then, fix the bug. Finally, add tests.\n" + "line\n" * 200},
+            {
+                "role": "user",
+                "content": "First, analyze the code. Then, fix the bug. Finally, add tests.\n"
+                + "line\n" * 200,
+            },
             {"role": "assistant", "content": "I'll help with that."},
             {"role": "user", "content": "Here's the code:\n```python\n" + "x = 1\n" * 100 + "```"},
         ]
@@ -106,7 +122,8 @@ class TestTierMapping:
 class TestModelSelection:
     def test_local_first_prefers_local(self):
         decision = select_model(
-            intent="simple_qa", complexity="simple",
+            intent="simple_qa",
+            complexity="simple",
             tier=CapabilityTier.SMALL,
             vram_gb=16,
             available_local_models=["qwen2.5:7b", "llama3.1:8b"],
@@ -120,7 +137,8 @@ class TestModelSelection:
 
     def test_cloud_fallback_when_no_local(self):
         decision = select_model(
-            intent="reasoning", complexity="complex",
+            intent="reasoning",
+            complexity="complex",
             tier=CapabilityTier.LARGE,
             vram_gb=0,
             available_local_models=[],
@@ -133,7 +151,8 @@ class TestModelSelection:
 
     def test_preferred_local_selected_when_capable(self):
         decision = select_model(
-            intent="summarization", complexity="simple",
+            intent="summarization",
+            complexity="simple",
             tier=CapabilityTier.SMALL,
             vram_gb=32,
             available_local_models=["qwen2.5:7b", "qwen2.5:32b"],
@@ -147,7 +166,8 @@ class TestModelSelection:
     def test_vram_filtering(self):
         """Models that don't fit in VRAM should not be selected."""
         decision = select_model(
-            intent="reasoning", complexity="moderate",
+            intent="reasoning",
+            complexity="moderate",
             tier=CapabilityTier.MID,
             vram_gb=4,  # Very limited
             available_local_models=["qwen2.5:7b", "qwen2.5:32b", "phi3:mini"],
@@ -160,7 +180,8 @@ class TestModelSelection:
 
     def test_require_tools_filters(self):
         decision = select_model(
-            intent="agentic", complexity="simple",
+            intent="agentic",
+            complexity="simple",
             tier=CapabilityTier.MID,
             vram_gb=32,
             available_local_models=["qwen2.5:7b", "deepseek-r1:14b"],
@@ -181,9 +202,14 @@ class TestRouter:
             local_first=True,
             preferred_local="qwen2.5:7b",
         )
-        decision = router.route([
-            {"role": "user", "content": "Summarize this text: The quick brown fox jumps over the lazy dog."}
-        ])
+        decision = router.route(
+            [
+                {
+                    "role": "user",
+                    "content": "Summarize this text: The quick brown fox jumps over the lazy dog.",
+                }
+            ]
+        )
         assert decision.intent == "summarization"
         assert decision.model.is_local
         # Engine intercepts simple summarization
@@ -197,8 +223,13 @@ class TestRouter:
             local_first=True,
             preferred_cloud="gpt-4o",
         )
-        decision = router.route([
-            {"role": "user", "content": "Plan and execute a complex multi-step agentic workflow with tool calls"}
-        ])
+        decision = router.route(
+            [
+                {
+                    "role": "user",
+                    "content": "Plan and execute a complex multi-step agentic workflow with tool calls",
+                }
+            ]
+        )
         assert not decision.model.is_local
         assert decision.model.provider == "openai"

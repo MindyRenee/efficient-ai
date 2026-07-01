@@ -104,8 +104,7 @@ class SemanticCache:
     # ─── Embedding ─────────────────────────────────────────────────────────
 
     def _get_embedding(self, text: str) -> np.ndarray:
-        """Get embedding for text. Tries Ollama first, falls back to hash-based.
-        """
+        """Get embedding for text. Tries Ollama first, falls back to hash-based."""
         # Try Ollama embeddings
         try:
             with httpx.Client(timeout=10.0) as client:
@@ -133,7 +132,11 @@ class SemanticCache:
         tokens = text.lower().split()
         for token in tokens:
             for n in (1, 2, 3):
-                grams = [token[i:i+n] for i in range(len(token) - n + 1)] if len(token) >= n else [token]
+                grams = (
+                    [token[i : i + n] for i in range(len(token) - n + 1)]
+                    if len(token) >= n
+                    else [token]
+                )
                 for gram in grams:
                     h = int(hashlib.md5(gram.encode()).hexdigest(), 16)
                     idx = h % dim
@@ -269,5 +272,7 @@ class SemanticCache:
             return {
                 "total_entries": row["total"] or 0,
                 "total_hits": row["total_hits"] or 0,
-                "db_size_bytes": Path(self.db_path).stat().st_size if Path(self.db_path).exists() else 0,
+                "db_size_bytes": Path(self.db_path).stat().st_size
+                if Path(self.db_path).exists()
+                else 0,
             }

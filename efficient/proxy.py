@@ -44,9 +44,9 @@ from typing import Any
 
 # Pricing tiers (in USD per request)
 PRICING = {
-    "engine": 0.0001,   # Embedded deterministic engine — basically free
-    "ollama": 0.001,    # Local model inference — cheaper than any cloud
-    "cloud": 0.01,      # Cloud fallback — pass-through + small markup
+    "engine": 0.0001,  # Embedded deterministic engine — basically free
+    "ollama": 0.001,  # Local model inference — cheaper than any cloud
+    "cloud": 0.01,  # Cloud fallback — pass-through + small markup
 }
 
 # Optional Prometheus metrics (no-op fallback if not installed)
@@ -54,44 +54,34 @@ try:
     from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
     REQUEST_COUNT: Any = Counter(
-        'efficient_requests_total',
-        'Total number of requests',
-        ['tier', 'status']
+        "efficient_requests_total", "Total number of requests", ["tier", "status"]
     )
     REQUEST_LATENCY: Any = Histogram(
-        'efficient_request_latency_seconds',
-        'Request latency in seconds',
-        ['tier']
+        "efficient_request_latency_seconds", "Request latency in seconds", ["tier"]
     )
-    CACHE_HIT_RATE: Any = Gauge(
-        'efficient_cache_hit_rate',
-        'Cache hit rate percentage'
-    )
+    CACHE_HIT_RATE: Any = Gauge("efficient_cache_hit_rate", "Cache hit rate percentage")
     BACKEND_DISTRIBUTION: Any = Counter(
-        'efficient_backend_requests_total',
-        'Total requests per backend',
-        ['backend']
+        "efficient_backend_requests_total", "Total requests per backend", ["backend"]
     )
     PAYMENT_VERIFICATION_COUNT: Any = Counter(
-        'efficient_payment_verifications_total',
-        'Total payment verifications',
-        ['status']
+        "efficient_payment_verifications_total", "Total payment verifications", ["status"]
     )
-    ACTIVE_REQUESTS: Any = Gauge(
-        'efficient_active_requests',
-        'Number of active requests'
-    )
+    ACTIVE_REQUESTS: Any = Gauge("efficient_active_requests", "Number of active requests")
 except ImportError:
     # No-op metrics for environments without prometheus-client
     class _NoOpMetric:
         def labels(self, **kwargs):
             return self
+
         def inc(self, amount=1):
             pass
+
         def dec(self, amount=1):
             pass
+
         def observe(self, value):
             pass
+
         def set(self, value):
             pass
 
@@ -100,8 +90,10 @@ except ImportError:
             class _Timer:
                 def __enter__(self):
                     return self
+
                 def __exit__(self, *args):
                     pass
+
             return _Timer()
 
     REQUEST_COUNT = _NoOpMetric()
@@ -110,6 +102,7 @@ except ImportError:
     BACKEND_DISTRIBUTION = _NoOpMetric()
     PAYMENT_VERIFICATION_COUNT = _NoOpMetric()
     ACTIVE_REQUESTS = _NoOpMetric()
+
     def generate_latest(registry: Any = None, escaping: str = "underscore") -> bytes:  # type: ignore[misc]
         return b""
 
@@ -159,10 +152,12 @@ def create_app(
 
     if efficient_client is None:
         from efficient.client import Client
+
         efficient_client = Client()
 
     # Create a single LocalEngine instance to reuse across requests
     from efficient.local_engine import LocalEngine
+
     local_engine = LocalEngine()
 
     wallet = wallet_address or DEFAULT_WALLET
@@ -174,8 +169,8 @@ def create_app(
     app = FastAPI(
         title="Efficient AI Proxy",
         description="OpenAI-compatible API with x402 micropayments. "
-                    "88% of queries handled by embedded engine for $0.0001. "
-                    "No API key needed — pay per request via x402.",
+        "88% of queries handled by embedded engine for $0.0001. "
+        "No API key needed — pay per request via x402.",
         version="0.1.0",
     )
 
@@ -183,6 +178,7 @@ def create_app(
     telemetry_instance = None
     try:
         from efficient.telemetry import Telemetry
+
         telemetry_instance = Telemetry()
     except Exception:
         pass
@@ -251,6 +247,7 @@ def create_app(
 
         try:
             import httpx
+
             payload = _decode_payment_payload(payment_header)
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
@@ -337,10 +334,10 @@ def create_app(
 
     # Add the endpoint directly to the app's router to bypass FastAPI validation
     async def chat_completions_handler(request: Request):
-        """OpenAI-compatible chat completions endpoint with x402 payments.
-        """
+        """OpenAI-compatible chat completions endpoint with x402 payments."""
         # Parse JSON body
         import json
+
         try:
             body = await request.json()
         except Exception:
@@ -349,13 +346,17 @@ def create_app(
                 if not body_str:
                     return JSONResponse(
                         status_code=400,
-                        content={"error": {"message": "Empty request body", "type": "invalid_request"}},
+                        content={
+                            "error": {"message": "Empty request body", "type": "invalid_request"}
+                        },
                     )
                 body = json.loads(body_str.decode())
             except Exception as e2:
                 return JSONResponse(
                     status_code=400,
-                    content={"error": {"message": f"Invalid JSON: {e2!s}", "type": "invalid_request"}},
+                    content={
+                        "error": {"message": f"Invalid JSON: {e2!s}", "type": "invalid_request"}
+                    },
                 )
 
         messages = body.get("messages", [])
@@ -367,7 +368,9 @@ def create_app(
         if not messages:
             return JSONResponse(
                 status_code=400,
-                content={"error": {"message": "Messages list cannot be empty", "type": "invalid_request"}},
+                content={
+                    "error": {"message": "Messages list cannot be empty", "type": "invalid_request"}
+                },
             )
 
         # Validate and convert messages to dict format
@@ -376,27 +379,52 @@ def create_app(
             if not isinstance(m, dict):
                 return JSONResponse(
                     status_code=400,
-                    content={"error": {"message": "Each message must be a JSON object", "type": "invalid_request"}},
+                    content={
+                        "error": {
+                            "message": "Each message must be a JSON object",
+                            "type": "invalid_request",
+                        }
+                    },
                 )
             if "role" not in m:
                 return JSONResponse(
                     status_code=400,
-                    content={"error": {"message": "Message missing 'role' field", "type": "invalid_request"}},
+                    content={
+                        "error": {
+                            "message": "Message missing 'role' field",
+                            "type": "invalid_request",
+                        }
+                    },
                 )
             if "content" not in m:
                 return JSONResponse(
                     status_code=400,
-                    content={"error": {"message": "Message missing 'content' field", "type": "invalid_request"}},
+                    content={
+                        "error": {
+                            "message": "Message missing 'content' field",
+                            "type": "invalid_request",
+                        }
+                    },
                 )
             if not m["role"] or not isinstance(m["role"], str):
                 return JSONResponse(
                     status_code=400,
-                    content={"error": {"message": "Message 'role' must be a non-empty string", "type": "invalid_request"}},
+                    content={
+                        "error": {
+                            "message": "Message 'role' must be a non-empty string",
+                            "type": "invalid_request",
+                        }
+                    },
                 )
             if m["content"] is None or (isinstance(m["content"], str) and not m["content"].strip()):
                 return JSONResponse(
                     status_code=400,
-                    content={"error": {"message": "Message 'content' cannot be empty", "type": "invalid_request"}},
+                    content={
+                        "error": {
+                            "message": "Message 'content' cannot be empty",
+                            "type": "invalid_request",
+                        }
+                    },
                 )
             msg_dicts.append({"role": m["role"], "content": m["content"]})
 
@@ -454,8 +482,14 @@ def create_app(
         ACTIVE_REQUESTS.inc()
 
         try:
-            eff_model = "auto" if model in ("auto", "gpt-4o", "gpt-4o-mini", "gpt-4", "gpt-3.5-turbo", "") else model
-            response = efficient_client.chat(messages=msg_dicts, model=eff_model, response_format=response_format)
+            eff_model = (
+                "auto"
+                if model in ("auto", "gpt-4o", "gpt-4o-mini", "gpt-4", "gpt-3.5-turbo", "")
+                else model
+            )
+            response = efficient_client.chat(
+                messages=msg_dicts, model=eff_model, response_format=response_format
+            )
 
             # Update cache hit rate if available (using cached telemetry instance)
             if efficient_client.cache and telemetry_instance:
@@ -475,12 +509,21 @@ def create_app(
                         "object": "chat.completion.chunk",
                         "created": int(time.time()),
                         "model": response.model,
-                        "choices": [{"index": 0, "delta": {"role": "assistant", "content": response.content}, "finish_reason": None}],
+                        "choices": [
+                            {
+                                "index": 0,
+                                "delta": {"role": "assistant", "content": response.content},
+                                "finish_reason": None,
+                            }
+                        ],
                     }
                     yield f"data: {json.dumps(chunk)}\n\n"
                     final_chunk = {
-                        "id": chunk["id"], "object": "chat.completion.chunk", "created": chunk["created"],
-                        "model": response.model, "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+                        "id": chunk["id"],
+                        "object": "chat.completion.chunk",
+                        "created": chunk["created"],
+                        "model": response.model,
+                        "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
                     }
                     yield f"data: {json.dumps(final_chunk)}\n\n"
                     yield "data: [DONE]\n\n"
@@ -496,8 +539,12 @@ def create_app(
                 return StreamingResponse(
                     stream_generator(),
                     media_type="text/event-stream",
-                    headers={"X-Tier": response.provider, "X-Price": f"${price:.4f}", "X-Model": response.model},
-                    background=BackgroundTask(record_streaming_metrics)
+                    headers={
+                        "X-Tier": response.provider,
+                        "X-Price": f"${price:.4f}",
+                        "X-Model": response.model,
+                    },
+                    background=BackgroundTask(record_streaming_metrics),
                 )
 
             # Non-streaming: record metrics immediately
@@ -505,11 +552,26 @@ def create_app(
             BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
             REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
 
-            result = _make_chat_completion(content=response.content, model=response.model, input_tokens=response.input_tokens, output_tokens=response.output_tokens)
-            return JSONResponse(content=result, headers={"X-Tier": response.provider, "X-Price": f"${price:.4f}", "X-Model": response.model, "X-Latency-ms": f"{response.latency_ms:.1f}"})
+            result = _make_chat_completion(
+                content=response.content,
+                model=response.model,
+                input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens,
+            )
+            return JSONResponse(
+                content=result,
+                headers={
+                    "X-Tier": response.provider,
+                    "X-Price": f"${price:.4f}",
+                    "X-Model": response.model,
+                    "X-Latency-ms": f"{response.latency_ms:.1f}",
+                },
+            )
         except Exception as e:
             REQUEST_COUNT.labels(tier=tier, status="error").inc()
-            return JSONResponse(status_code=500, content={"error": {"message": str(e), "type": "internal_error"}})
+            return JSONResponse(
+                status_code=500, content={"error": {"message": str(e), "type": "internal_error"}}
+            )
         finally:
             ACTIVE_REQUESTS.dec()
 
@@ -542,9 +604,11 @@ def run_server(
     print(f"  Endpoint:   http://{host}:{port}/v1/chat/completions")
     print(f"  Network:    {network}")
     print(f"  Wallet:     {wallet_address or '(free mode)'}")
-    print(f"  Pricing:    engine=${PRICING['engine']:.4f} | "
-          f"ollama=${PRICING['ollama']:.4f} | "
-          f"cloud=${PRICING['cloud']:.4f}")
+    print(
+        f"  Pricing:    engine=${PRICING['engine']:.4f} | "
+        f"ollama=${PRICING['ollama']:.4f} | "
+        f"cloud=${PRICING['cloud']:.4f}"
+    )
     print()
 
     uvicorn.run(app, host=host, port=port)

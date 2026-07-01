@@ -40,20 +40,22 @@ import numpy as np
 
 # ─── Response ─────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class EngineResponse:
     """Response from the local engine."""
 
     content: str
-    handled: bool = True           # False if engine can't handle this request
-    method: str = ""               # Which algorithm was used
+    handled: bool = True  # False if engine can't handle this request
+    method: str = ""  # Which algorithm was used
     input_tokens: int = 0
     output_tokens: int = 0
     latency_ms: float = 0.0
-    confidence: float = 1.0        # How confident the engine is (0-1)
+    confidence: float = 1.0  # How confident the engine is (0-1)
 
 
 # ─── Text Utilities ───────────────────────────────────────────────────────────
+
 
 def _tokenize(text: str) -> list[str]:
     """Simple word tokenizer."""
@@ -83,6 +85,7 @@ def _estimate_tokens(text: str) -> int:
 
 
 # ─── TF-IDF Summarization ─────────────────────────────────────────────────────
+
 
 def _compute_tfidf(sentences: list[str]) -> np.ndarray:
     """Compute TF-IDF scores for each sentence.
@@ -168,42 +171,222 @@ def _summarize_extractive(text: str, max_sentences: int = 3) -> str:
 
 # Pre-built lexicons for common classification tasks
 _SENTIMENT_POSITIVE = {
-    "good", "great", "excellent", "amazing", "wonderful", "fantastic", "love",
-    "loved", "like", "liked", "best", "awesome", "perfect", "happy", "glad",
-    "pleased", "satisfied", "delighted", "superb", "brilliant", "outstanding",
-    "remarkable", "fabulous", "marvelous", "terrific", "enjoy", "enjoyed",
-    "recommend", "recommended", "impressive", "beautiful", "nice", "better",
-    "win", "winning", "success", "successful", "positive", "beneficial",
+    "good",
+    "great",
+    "excellent",
+    "amazing",
+    "wonderful",
+    "fantastic",
+    "love",
+    "loved",
+    "like",
+    "liked",
+    "best",
+    "awesome",
+    "perfect",
+    "happy",
+    "glad",
+    "pleased",
+    "satisfied",
+    "delighted",
+    "superb",
+    "brilliant",
+    "outstanding",
+    "remarkable",
+    "fabulous",
+    "marvelous",
+    "terrific",
+    "enjoy",
+    "enjoyed",
+    "recommend",
+    "recommended",
+    "impressive",
+    "beautiful",
+    "nice",
+    "better",
+    "win",
+    "winning",
+    "success",
+    "successful",
+    "positive",
+    "beneficial",
 }
 _SENTIMENT_NEGATIVE = {
-    "bad", "terrible", "awful", "horrible", "hate", "hated", "worst", "disgusting",
-    "disappointing", "disappointed", "poor", "broken", "useless", "waste", "fail",
-    "failed", "failure", "wrong", "error", "bug", "crash", "slow", "ugly",
-    "boring", "annoying", "frustrating", "frustrated", "angry", "sad", "unhappy",
-    "dissatisfied", "negative", "harmful", "damage", "damaged", "loss", "lose",
-    "losing", "problem", "issue", "complaint", "refund", "return", "avoid",
+    "bad",
+    "terrible",
+    "awful",
+    "horrible",
+    "hate",
+    "hated",
+    "worst",
+    "disgusting",
+    "disappointing",
+    "disappointed",
+    "poor",
+    "broken",
+    "useless",
+    "waste",
+    "fail",
+    "failed",
+    "failure",
+    "wrong",
+    "error",
+    "bug",
+    "crash",
+    "slow",
+    "ugly",
+    "boring",
+    "annoying",
+    "frustrating",
+    "frustrated",
+    "angry",
+    "sad",
+    "unhappy",
+    "dissatisfied",
+    "negative",
+    "harmful",
+    "damage",
+    "damaged",
+    "loss",
+    "lose",
+    "losing",
+    "problem",
+    "issue",
+    "complaint",
+    "refund",
+    "return",
+    "avoid",
 }
 
 _CATEGORY_KEYWORDS: dict[str, set[str]] = {
-    "technology": {"software", "hardware", "computer", "digital", "code", "program",
-                   "algorithm", "data", "system", "network", "internet", "ai", "machine",
-                   "tech", "app", "application", "database", "server", "cloud", "api"},
-    "business": {"company", "market", "sales", "revenue", "profit", "customer",
-                 "business", "corporate", "strategy", "growth", "investment", "finance",
-                 "economic", "trade", "commerce", "industry", "startup", "venture"},
-    "science": {"research", "study", "experiment", "theory", "hypothesis", "science",
-                "scientific", "physics", "chemistry", "biology", "genome", "cell",
-                "molecule", "atom", "quantum", "evolution", "species", "organism"},
-    "sports": {"game", "team", "player", "score", "win", "lose", "match", "tournament",
-               "championship", "league", "coach", "athlete", "sport", "race", "season",
-               "play", "field", "court", "goal", "point"},
-    "entertainment": {"movie", "film", "music", "song", "album", "actor", "actress",
-                      "celebrity", "show", "series", "episode", "concert", "performance",
-                      "art", "book", "novel", "game", "play", "theater", "streaming"},
-    "health": {"health", "medical", "doctor", "patient", "disease", "treatment",
-               "medicine", "hospital", "clinic", "symptom", "diagnosis", "therapy",
-               "drug", "prescription", "wellness", "fitness", "diet", "nutrition",
-               "exercise", "mental"},
+    "technology": {
+        "software",
+        "hardware",
+        "computer",
+        "digital",
+        "code",
+        "program",
+        "algorithm",
+        "data",
+        "system",
+        "network",
+        "internet",
+        "ai",
+        "machine",
+        "tech",
+        "app",
+        "application",
+        "database",
+        "server",
+        "cloud",
+        "api",
+    },
+    "business": {
+        "company",
+        "market",
+        "sales",
+        "revenue",
+        "profit",
+        "customer",
+        "business",
+        "corporate",
+        "strategy",
+        "growth",
+        "investment",
+        "finance",
+        "economic",
+        "trade",
+        "commerce",
+        "industry",
+        "startup",
+        "venture",
+    },
+    "science": {
+        "research",
+        "study",
+        "experiment",
+        "theory",
+        "hypothesis",
+        "science",
+        "scientific",
+        "physics",
+        "chemistry",
+        "biology",
+        "genome",
+        "cell",
+        "molecule",
+        "atom",
+        "quantum",
+        "evolution",
+        "species",
+        "organism",
+    },
+    "sports": {
+        "game",
+        "team",
+        "player",
+        "score",
+        "win",
+        "lose",
+        "match",
+        "tournament",
+        "championship",
+        "league",
+        "coach",
+        "athlete",
+        "sport",
+        "race",
+        "season",
+        "play",
+        "field",
+        "court",
+        "goal",
+        "point",
+    },
+    "entertainment": {
+        "movie",
+        "film",
+        "music",
+        "song",
+        "album",
+        "actor",
+        "actress",
+        "celebrity",
+        "show",
+        "series",
+        "episode",
+        "concert",
+        "performance",
+        "art",
+        "book",
+        "novel",
+        "game",
+        "play",
+        "theater",
+        "streaming",
+    },
+    "health": {
+        "health",
+        "medical",
+        "doctor",
+        "patient",
+        "disease",
+        "treatment",
+        "medicine",
+        "hospital",
+        "clinic",
+        "symptom",
+        "diagnosis",
+        "therapy",
+        "drug",
+        "prescription",
+        "wellness",
+        "fitness",
+        "diet",
+        "nutrition",
+        "exercise",
+        "mental",
+    },
 }
 
 
@@ -244,11 +427,39 @@ def _classify_category(text: str) -> str:
 def _classify_spam(text: str) -> str:
     """Classify text as spam or not spam."""
     spam_indicators = {
-        "free", "winner", "win", "prize", "congratulations", "click", "click here",
-        "subscribe", "unsubscribe", "limited", "offer", "deal", "discount", "cash",
-        "money", "credit", "loan", "guarantee", "risk", "urgent", "act now",
-        "buy now", "order now", "100%", "best price", "lowest price", "save",
-        "earn", "income", "profit", "investment", "opportunity", "exclusive",
+        "free",
+        "winner",
+        "win",
+        "prize",
+        "congratulations",
+        "click",
+        "click here",
+        "subscribe",
+        "unsubscribe",
+        "limited",
+        "offer",
+        "deal",
+        "discount",
+        "cash",
+        "money",
+        "credit",
+        "loan",
+        "guarantee",
+        "risk",
+        "urgent",
+        "act now",
+        "buy now",
+        "order now",
+        "100%",
+        "best price",
+        "lowest price",
+        "save",
+        "earn",
+        "income",
+        "profit",
+        "investment",
+        "opportunity",
+        "exclusive",
     }
     tokens = set(_tokenize(text))
     spam_score = len(tokens & spam_indicators)
@@ -273,7 +484,10 @@ _DATE_RE = re.compile(
     r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s*\d{0,4})\b",
     re.IGNORECASE,
 )
-_CURRENCY_RE = re.compile(r"\$[\d,]+(?:\.\d{2})?|\d+(?:,\d{3})*(?:\.\d+)?\s*(?:USD|EUR|GBP|dollars?|euros?|pounds?)", re.IGNORECASE)
+_CURRENCY_RE = re.compile(
+    r"\$[\d,]+(?:\.\d{2})?|\d+(?:,\d{3})*(?:\.\d+)?\s*(?:USD|EUR|GBP|dollars?|euros?|pounds?)",
+    re.IGNORECASE,
+)
 _IP_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 _ZIP_RE = re.compile(r"\b\d{5}(?:-\d{4})?\b")
 
@@ -308,14 +522,23 @@ def _extract_by_pattern(text: str, pattern_name: str) -> str:
     entities = _extract_entities(text)
 
     type_map = {
-        "email": "emails", "emails": "emails",
-        "phone": "phones", "phones": "phones",
-        "url": "urls", "urls": "urls",
-        "date": "dates", "dates": "dates",
-        "money": "currency", "currency": "currency", "amount": "currency",
-        "name": "names", "names": "names",
-        "ip": "ip_addresses", "ip_address": "ip_addresses",
-        "zip": "zip_codes", "zip_code": "zip_codes",
+        "email": "emails",
+        "emails": "emails",
+        "phone": "phones",
+        "phones": "phones",
+        "url": "urls",
+        "urls": "urls",
+        "date": "dates",
+        "dates": "dates",
+        "money": "currency",
+        "currency": "currency",
+        "amount": "currency",
+        "name": "names",
+        "names": "names",
+        "ip": "ip_addresses",
+        "ip_address": "ip_addresses",
+        "zip": "zip_codes",
+        "zip_code": "zip_codes",
     }
 
     key = type_map.get(pattern_name.lower(), pattern_name.lower() + "s")
@@ -335,7 +558,7 @@ def _extract_by_pattern(text: str, pattern_name: str) -> str:
 
     if len(values) == 1:
         return values[0]
-    return "\n".join(f"{i+1}. {v}" for i, v in enumerate(values))
+    return "\n".join(f"{i + 1}. {v}" for i, v in enumerate(values))
 
 
 # ─── Simple Q&A ───────────────────────────────────────────────────────────────
@@ -466,7 +689,8 @@ def _try_arithmetic(text: str) -> str | None:
     expr_match = re.search(
         r"(?:what is|what's|calculate|compute|solve|evaluate)?\s*"
         r"([-+*/.\d\s()%^]+)",
-        text, re.IGNORECASE,
+        text,
+        re.IGNORECASE,
     )
     if not expr_match:
         return None
@@ -511,10 +735,10 @@ def _try_unit_conversion(text: str) -> str | None:
         if match:
             value = float(match.group(1))
             if from_unit == "celsius" and to_unit == "fahrenheit":
-                result = value * 9/5 + 32
+                result = value * 9 / 5 + 32
                 return f"{value}°C = {result:.1f}°F"
             if from_unit == "fahrenheit" and to_unit == "celsius":
-                result = (value - 32) * 5/9
+                result = (value - 32) * 5 / 9
                 return f"{value}°F = {result:.1f}°C"
             if factor is not None:
                 result = value * factor
@@ -525,7 +749,9 @@ def _try_unit_conversion(text: str) -> str | None:
 def _try_definition(text: str) -> str | None:
     """Try to answer definition questions."""
     # Try "what is/what's/define/meaning of" patterns
-    match = re.match(r"(?:what is|what's|define|meaning of)\s+(?:a|an|the\s+)?(.+)", text, re.IGNORECASE)
+    match = re.match(
+        r"(?:what is|what's|define|meaning of)\s+(?:a|an|the\s+)?(.+)", text, re.IGNORECASE
+    )
     if match:
         term = match.group(1).strip().rstrip("?.")
         kb_key = term.lower()
@@ -568,6 +794,7 @@ def _simple_qa(text: str) -> str | None:
 
 # ─── Code Generation (Template-Based) ─────────────────────────────────────────
 
+
 def _generate_code(text: str) -> str | None:
     """Generate code from simple natural language descriptions."""
     text_lower = text.lower()
@@ -602,18 +829,12 @@ def _generate_code(text: str) -> str | None:
     # Sort
     if "sort" in text_lower and "list" in text_lower:
         return (
-            "def sort_list(lst):\n"
-            '    """Sort a list in ascending order."""\n'
-            "    return sorted(lst)"
+            'def sort_list(lst):\n    """Sort a list in ascending order."""\n    return sorted(lst)'
         )
 
     # Reverse string
     if "reverse" in text_lower and "string" in text_lower:
-        return (
-            "def reverse_string(s):\n"
-            '    """Reverse a string."""\n'
-            "    return s[::-1]"
-        )
+        return 'def reverse_string(s):\n    """Reverse a string."""\n    return s[::-1]'
 
     # Palindrome check
     if "palindrome" in text_lower:
@@ -1183,9 +1404,9 @@ def _generate_code(text: str) -> str | None:
 
 # ─── Algebra Solver ───────────────────────────────────────────────────────────
 
+
 def _solve_algebra(text: str) -> str | None:
-    """Solve simple algebraic equations: ax + b = c, ax^2 + bx + c = 0.
-    """
+    """Solve simple algebraic equations: ax + b = c, ax^2 + bx + c = 0."""
     text_lower = text.lower().strip()
 
     # Quadratic: ax^2 + bx + c = 0 (check BEFORE linear to avoid false match)
@@ -1197,22 +1418,26 @@ def _solve_algebra(text: str) -> str | None:
     )
     if quad_match:
         a_str, b_str, c_str = quad_match.groups()
-        a = float(a_str) if a_str and a_str not in ("", "+", "-") else (1.0 if not a_str or a_str == "+" else -1.0)
+        a = (
+            float(a_str)
+            if a_str and a_str not in ("", "+", "-")
+            else (1.0 if not a_str or a_str == "+" else -1.0)
+        )
         b = float(b_str.replace(" ", "")) if b_str else 0.0
         c = float(c_str.replace(" ", "")) if c_str else 0.0
 
-        discriminant = b**2 - 4*a*c
+        discriminant = b**2 - 4 * a * c
         if discriminant < 0:
-            real = -b / (2*a)
-            imag = (abs(discriminant) ** 0.5) / (2*a)
+            real = -b / (2 * a)
+            imag = (abs(discriminant) ** 0.5) / (2 * a)
             return f"x = {real:.4f} ± {imag:.4f}i (complex roots)"
         if discriminant == 0:
-            x = -b / (2*a)
+            x = -b / (2 * a)
             if x == int(x):
                 x = int(x)
             return f"x = {x} (double root)"
-        x1 = (-b + discriminant**0.5) / (2*a)
-        x2 = (-b - discriminant**0.5) / (2*a)
+        x1 = (-b + discriminant**0.5) / (2 * a)
+        x2 = (-b - discriminant**0.5) / (2 * a)
         if x1 == int(x1):
             x1 = int(x1)
         if x2 == int(x2):
@@ -1226,7 +1451,11 @@ def _solve_algebra(text: str) -> str | None:
     )
     if linear_match:
         a_str, b_str, c_str = linear_match.groups()
-        a = float(a_str) if a_str and a_str not in ("", "+", "-") else (1.0 if not a_str or a_str == "+" else -1.0)
+        a = (
+            float(a_str)
+            if a_str and a_str not in ("", "+", "-")
+            else (1.0 if not a_str or a_str == "+" else -1.0)
+        )
         b = float(b_str.replace(" ", "")) if b_str else 0.0
         c = float(c_str) if c_str else 0.0
 
@@ -1246,48 +1475,118 @@ def _solve_algebra(text: str) -> str | None:
 # Common English → Spanish/French/German word replacements
 _TRANSLATIONS: dict[str, dict[str, str]] = {
     "spanish": {
-        "hello": "hola", "goodbye": "adiós", "thank you": "gracias",
-        "please": "por favor", "yes": "sí", "no": "no",
-        "good morning": "buenos días", "good night": "buenas noches",
-        "how are you": "cómo estás", "fine": "bien",
-        "water": "agua", "food": "comida", "friend": "amigo",
-        "love": "amor", "house": "casa", "dog": "perro",
-        "cat": "gato", "book": "libro", "car": "coche",
-        "good": "bueno", "bad": "malo", "big": "grande",
-        "small": "pequeño", "hot": "caliente", "cold": "frío",
-        "one": "uno", "two": "dos", "three": "tres",
-        "four": "cuatro", "five": "cinco", "six": "seis",
-        "seven": "siete", "eight": "ocho", "nine": "nueve", "ten": "diez",
+        "hello": "hola",
+        "goodbye": "adiós",
+        "thank you": "gracias",
+        "please": "por favor",
+        "yes": "sí",
+        "no": "no",
+        "good morning": "buenos días",
+        "good night": "buenas noches",
+        "how are you": "cómo estás",
+        "fine": "bien",
+        "water": "agua",
+        "food": "comida",
+        "friend": "amigo",
+        "love": "amor",
+        "house": "casa",
+        "dog": "perro",
+        "cat": "gato",
+        "book": "libro",
+        "car": "coche",
+        "good": "bueno",
+        "bad": "malo",
+        "big": "grande",
+        "small": "pequeño",
+        "hot": "caliente",
+        "cold": "frío",
+        "one": "uno",
+        "two": "dos",
+        "three": "tres",
+        "four": "cuatro",
+        "five": "cinco",
+        "six": "seis",
+        "seven": "siete",
+        "eight": "ocho",
+        "nine": "nueve",
+        "ten": "diez",
     },
     "french": {
-        "hello": "bonjour", "goodbye": "au revoir", "thank you": "merci",
-        "please": "s'il vous plaît", "yes": "oui", "no": "non",
-        "good morning": "bonjour", "good night": "bonne nuit",
-        "how are you": "comment allez-vous", "fine": "bien",
-        "water": "eau", "food": "nourriture", "friend": "ami",
-        "love": "amour", "house": "maison", "dog": "chien",
-        "cat": "chat", "book": "livre", "car": "voiture",
-        "good": "bon", "bad": "mauvais", "big": "grand",
-        "small": "petit", "hot": "chaud", "cold": "froid",
-        "one": "un", "two": "deux", "three": "trois",
-        "four": "quatre", "five": "cinq", "six": "six",
-        "seven": "sept", "eight": "huit", "nine": "neuf", "ten": "dix",
+        "hello": "bonjour",
+        "goodbye": "au revoir",
+        "thank you": "merci",
+        "please": "s'il vous plaît",
+        "yes": "oui",
+        "no": "non",
+        "good morning": "bonjour",
+        "good night": "bonne nuit",
+        "how are you": "comment allez-vous",
+        "fine": "bien",
+        "water": "eau",
+        "food": "nourriture",
+        "friend": "ami",
+        "love": "amour",
+        "house": "maison",
+        "dog": "chien",
+        "cat": "chat",
+        "book": "livre",
+        "car": "voiture",
+        "good": "bon",
+        "bad": "mauvais",
+        "big": "grand",
+        "small": "petit",
+        "hot": "chaud",
+        "cold": "froid",
+        "one": "un",
+        "two": "deux",
+        "three": "trois",
+        "four": "quatre",
+        "five": "cinq",
+        "six": "six",
+        "seven": "sept",
+        "eight": "huit",
+        "nine": "neuf",
+        "ten": "dix",
     },
     "german": {
-        "hello": "hallo", "goodbye": "auf Wiedersehen", "thank you": "danke",
-        "please": "bitte", "yes": "ja", "no": "nein",
-        "good morning": "guten Morgen", "good night": "gute Nacht",
-        "how are you": "wie geht es dir", "fine": "gut",
-        "water": "Wasser", "food": "Essen", "friend": "Freund",
-        "love": "Liebe", "house": "Haus", "dog": "Hund",
-        "cat": "Katze", "book": "Buch", "car": "Auto",
-        "good": "gut", "bad": "schlecht", "big": "groß",
-        "small": "klein", "hot": "heiß", "cold": "kalt",
-        "one": "eins", "two": "zwei", "three": "drei",
-        "four": "vier", "five": "fünf", "six": "sechs",
-        "seven": "sieben", "eight": "acht", "nine": "neun", "ten": "zehn",
+        "hello": "hallo",
+        "goodbye": "auf Wiedersehen",
+        "thank you": "danke",
+        "please": "bitte",
+        "yes": "ja",
+        "no": "nein",
+        "good morning": "guten Morgen",
+        "good night": "gute Nacht",
+        "how are you": "wie geht es dir",
+        "fine": "gut",
+        "water": "Wasser",
+        "food": "Essen",
+        "friend": "Freund",
+        "love": "Liebe",
+        "house": "Haus",
+        "dog": "Hund",
+        "cat": "Katze",
+        "book": "Buch",
+        "car": "Auto",
+        "good": "gut",
+        "bad": "schlecht",
+        "big": "groß",
+        "small": "klein",
+        "hot": "heiß",
+        "cold": "kalt",
+        "one": "eins",
+        "two": "zwei",
+        "three": "drei",
+        "four": "vier",
+        "five": "fünf",
+        "six": "sechs",
+        "seven": "sieben",
+        "eight": "acht",
+        "nine": "neun",
+        "ten": "zehn",
     },
 }
+
 
 def _translate(text: str, target_lang: str) -> str | None:
     """Basic word-by-word translation using a dictionary."""
@@ -1302,7 +1601,7 @@ def _translate(text: str, target_lang: str) -> str | None:
     while i < len(words):
         # Try 2-word phrases first
         if i + 1 < len(words):
-            two_word = (words[i] + " " + words[i+1]).lower()
+            two_word = (words[i] + " " + words[i + 1]).lower()
             if two_word in dictionary:
                 result.append(dictionary[two_word])
                 i += 2
@@ -1323,9 +1622,11 @@ def _translate(text: str, target_lang: str) -> str | None:
 
 # ─── File Parsing ─────────────────────────────────────────────────────────────
 
+
 def _parse_file_summary(filepath: str) -> str | None:
     """Read a file and return a summary of its contents."""
     import os
+
     if not os.path.exists(filepath):
         return f"File not found: {filepath}"
 
@@ -1390,13 +1691,28 @@ def _parse_file_summary(filepath: str) -> str | None:
 
 # ─── Text Rewriting ───────────────────────────────────────────────────────────
 
+
 def _simplify_text(text: str) -> str:
     """Simplify text by removing filler words and shortening sentences."""
     filler = {
-        "very", "really", "quite", "rather", "somewhat", "fairly", "pretty",
-        "just", "actually", "basically", "literally", "essentially",
-        "in order to", "due to the fact that", "in spite of the fact that",
-        "at this point in time", "for the purpose of", "in the event that",
+        "very",
+        "really",
+        "quite",
+        "rather",
+        "somewhat",
+        "fairly",
+        "pretty",
+        "just",
+        "actually",
+        "basically",
+        "literally",
+        "essentially",
+        "in order to",
+        "due to the fact that",
+        "in spite of the fact that",
+        "at this point in time",
+        "for the purpose of",
+        "in the event that",
     }
     result = text
     for word in filler:
@@ -1412,11 +1728,19 @@ def _expand_text(text: str) -> str:
     if len(sents) <= 1:
         return text
 
-    transitions = ["Furthermore, ", "In addition, ", "Moreover, ", "Additionally, ", "It is also worth noting that "]
+    transitions = [
+        "Furthermore, ",
+        "In addition, ",
+        "Moreover, ",
+        "Additionally, ",
+        "It is also worth noting that ",
+    ]
     result = []
     for i, sent in enumerate(sents):
         if i > 0:
-            result.append(transitions[(i - 1) % len(transitions)] + sent.lower()[0].upper() + sent[1:])
+            result.append(
+                transitions[(i - 1) % len(transitions)] + sent.lower()[0].upper() + sent[1:]
+            )
         else:
             result.append(sent)
     return ". ".join(result)
@@ -1425,10 +1749,19 @@ def _expand_text(text: str) -> str:
 def _change_tone(text: str, tone: str) -> str:
     """Adjust the tone of text (basic implementation)."""
     formal_replacements = {
-        "can't": "cannot", "won't": "will not", "don't": "do not",
-        "it's": "it is", "they're": "they are", "we're": "we are",
-        "gonna": "going to", "wanna": "want to", "gotta": "got to",
-        "yeah": "yes", "nope": "no", "ok": "acceptable", "okay": "acceptable",
+        "can't": "cannot",
+        "won't": "will not",
+        "don't": "do not",
+        "it's": "it is",
+        "they're": "they are",
+        "we're": "we are",
+        "gonna": "going to",
+        "wanna": "want to",
+        "gotta": "got to",
+        "yeah": "yes",
+        "nope": "no",
+        "ok": "acceptable",
+        "okay": "acceptable",
     }
     casual_replacements = {v: k for k, v in formal_replacements.items()}
 
@@ -1443,6 +1776,7 @@ def _change_tone(text: str, tone: str) -> str:
 
 
 # ─── Structured Output ────────────────────────────────────────────────────────
+
 
 def _to_json(text: str, messages: list[dict]) -> str:
     """Convert text/response to structured JSON output."""
@@ -1506,6 +1840,7 @@ def _to_json(text: str, messages: list[dict]) -> str:
 
 # ─── Keyword Extraction ───────────────────────────────────────────────────────
 
+
 def _extract_keywords(text: str, n: int = 10) -> list[str]:
     """Extract top keywords using TF-IDF scoring."""
     sents = _sentences(text)
@@ -1530,19 +1865,91 @@ def _extract_keywords(text: str, n: int = 10) -> list[str]:
 
 
 _STOP_WORDS = {
-    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
-    "being", "have", "has", "had", "do", "does", "did", "will", "would",
-    "could", "should", "may", "might", "must", "can", "this", "that",
-    "these", "those", "i", "you", "he", "she", "it", "we", "they",
-    "what", "which", "who", "when", "where", "why", "how", "all",
-    "each", "every", "both", "few", "more", "most", "other", "some",
-    "such", "no", "not", "only", "own", "same", "so", "than", "too",
-    "very", "just", "also", "as", "if", "then", "else", "about",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "must",
+    "can",
+    "this",
+    "that",
+    "these",
+    "those",
+    "i",
+    "you",
+    "he",
+    "she",
+    "it",
+    "we",
+    "they",
+    "what",
+    "which",
+    "who",
+    "when",
+    "where",
+    "why",
+    "how",
+    "all",
+    "each",
+    "every",
+    "both",
+    "few",
+    "more",
+    "most",
+    "other",
+    "some",
+    "such",
+    "no",
+    "not",
+    "only",
+    "own",
+    "same",
+    "so",
+    "than",
+    "too",
+    "very",
+    "just",
+    "also",
+    "as",
+    "if",
+    "then",
+    "else",
+    "about",
 }
 
 
 # ─── Main Engine ──────────────────────────────────────────────────────────────
+
 
 class LocalEngine:
     """Embedded text processing engine. No LLM, no model download.
@@ -1593,7 +2000,13 @@ class LocalEngine:
         if complexity in ("trivial", "simple"):
             return True
         # Can handle moderate for classification, extraction, summarization, simple_qa
-        return complexity == "moderate" and intent in ("classification", "extraction", "summarization", "simple_qa", "structured_generation")
+        return complexity == "moderate" and intent in (
+            "classification",
+            "extraction",
+            "summarization",
+            "simple_qa",
+            "structured_generation",
+        )
 
     def generate(
         self,
@@ -1604,6 +2017,7 @@ class LocalEngine:
     ) -> EngineResponse:
         """Generate a response using deterministic algorithms."""
         import time
+
         start = time.time()
 
         # Get the last user message
@@ -1663,10 +2077,11 @@ class LocalEngine:
         target = text
         prefix_match = re.match(
             r"^(?:please\s+)?(?:summarize|summary|summarise)(?:\s+this)?\s*[:\-]?\s*",
-            text, re.IGNORECASE,
+            text,
+            re.IGNORECASE,
         )
         if prefix_match:
-            target = text[prefix_match.end():].strip()
+            target = text[prefix_match.end() :].strip()
 
         # If the text is short enough, just return it
         if _word_count(target) < 50:
@@ -1722,8 +2137,18 @@ class LocalEngine:
         text_lower = text.lower()
 
         # Check for specific entity types
-        for entity_type in ["email", "phone", "url", "date", "money", "currency",
-                            "name", "ip", "zip", "amount"]:
+        for entity_type in [
+            "email",
+            "phone",
+            "url",
+            "date",
+            "money",
+            "currency",
+            "name",
+            "ip",
+            "zip",
+            "amount",
+        ]:
             if entity_type in text_lower:
                 # The text to extract from is usually after "from:" or in quotes
                 target = self._extract_target_text(text)
@@ -1908,7 +2333,9 @@ class LocalEngine:
                             return result
 
         # Try file parsing
-        file_match = re.search(r"(?:parse|summarize|analyze|read)\s+(?:file\s+)?([\w\\/\.\-:]+\.\w+)", text_lower)
+        file_match = re.search(
+            r"(?:parse|summarize|analyze|read)\s+(?:file\s+)?([\w\\/\.\-:]+\.\w+)", text_lower
+        )
         if file_match:
             filepath = file_match.group(1)
             result = _parse_file_summary(filepath)

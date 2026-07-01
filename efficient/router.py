@@ -41,10 +41,10 @@ class RoutingDecision:
     """The result of a routing decision."""
 
     intent: str
-    complexity: str               # trivial, simple, moderate, complex
-    tier: CapabilityTier          # Minimum capability tier needed
+    complexity: str  # trivial, simple, moderate, complex
+    tier: CapabilityTier  # Minimum capability tier needed
     model: ModelInfo
-    reason: str                   # Human-readable explanation
+    reason: str  # Human-readable explanation
     use_cache: bool = True
     use_speculative: bool = False
 
@@ -59,7 +59,9 @@ _INTENT_PATTERNS: dict[str, list[re.Pattern]] = {
     ],
     "extraction": [
         re.compile(r"\b(extract|pull|parse|get the|find all|identify)\b", re.IGNORECASE),
-        re.compile(r"\b(emails?|phones?|addresses?|names?|dates?|amounts?)\b.*\b(from|in)\b", re.IGNORECASE),
+        re.compile(
+            r"\b(emails?|phones?|addresses?|names?|dates?|amounts?)\b.*\b(from|in)\b", re.IGNORECASE
+        ),
     ],
     "summarization": [
         re.compile(r"\b(summari[sz]e|condense|tldr|brief|digest|abridged?)\b", re.IGNORECASE),
@@ -139,6 +141,7 @@ def classify_intent(messages: list[dict]) -> str:
 
 # ─── Complexity Estimation ────────────────────────────────────────────────────
 
+
 def estimate_complexity(messages: list[dict]) -> str:
     """Estimate the complexity of a request.
 
@@ -185,61 +188,51 @@ _TIER_MAP: dict[tuple[str, str], CapabilityTier] = {
     ("classification", "simple"): CapabilityTier.MICRO,
     ("classification", "moderate"): CapabilityTier.SMALL,
     ("classification", "complex"): CapabilityTier.SMALL,
-
     # Extraction — low tier
     ("extraction", "trivial"): CapabilityTier.MICRO,
     ("extraction", "simple"): CapabilityTier.SMALL,
     ("extraction", "moderate"): CapabilityTier.SMALL,
     ("extraction", "complex"): CapabilityTier.MID,
-
     # Summarization — low-mid tier
     ("summarization", "trivial"): CapabilityTier.SMALL,
     ("summarization", "simple"): CapabilityTier.SMALL,
     ("summarization", "moderate"): CapabilityTier.MID,
     ("summarization", "complex"): CapabilityTier.MID,
-
     # Simple Q&A — low tier
     ("simple_qa", "trivial"): CapabilityTier.MICRO,
     ("simple_qa", "simple"): CapabilityTier.SMALL,
     ("simple_qa", "moderate"): CapabilityTier.SMALL,
     ("simple_qa", "complex"): CapabilityTier.MID,
-
     # Code completion — mid tier
     ("code_completion", "trivial"): CapabilityTier.SMALL,
     ("code_completion", "simple"): CapabilityTier.SMALL,
     ("code_completion", "moderate"): CapabilityTier.MID,
     ("code_completion", "complex"): CapabilityTier.LARGE,
-
     # RAG — mid tier
     ("rag", "trivial"): CapabilityTier.SMALL,
     ("rag", "simple"): CapabilityTier.SMALL,
     ("rag", "moderate"): CapabilityTier.MID,
     ("rag", "complex"): CapabilityTier.MID,
-
     # Structured generation — low-mid tier
     ("structured_generation", "trivial"): CapabilityTier.SMALL,
     ("structured_generation", "simple"): CapabilityTier.SMALL,
     ("structured_generation", "moderate"): CapabilityTier.MID,
     ("structured_generation", "complex"): CapabilityTier.MID,
-
     # Reasoning — mid-high tier
     ("reasoning", "trivial"): CapabilityTier.SMALL,
     ("reasoning", "simple"): CapabilityTier.MID,
     ("reasoning", "moderate"): CapabilityTier.MID,
     ("reasoning", "complex"): CapabilityTier.LARGE,
-
     # Agentic — high tier
     ("agentic", "trivial"): CapabilityTier.MID,
     ("agentic", "simple"): CapabilityTier.MID,
     ("agentic", "moderate"): CapabilityTier.LARGE,
     ("agentic", "complex"): CapabilityTier.FRONTIER,
-
     # Creative — mid tier
     ("creative", "trivial"): CapabilityTier.SMALL,
     ("creative", "simple"): CapabilityTier.MID,
     ("creative", "moderate"): CapabilityTier.MID,
     ("creative", "complex"): CapabilityTier.LARGE,
-
     # Unknown — be conservative
     ("unknown", "trivial"): CapabilityTier.SMALL,
     ("unknown", "simple"): CapabilityTier.MID,
@@ -257,6 +250,7 @@ def min_tier_for(intent: str, complexity: str) -> CapabilityTier:
 
 
 # ─── Model Selection ──────────────────────────────────────────────────────────
+
 
 def select_model(
     intent: str,
@@ -289,9 +283,11 @@ def select_model(
     #    code_completion, structured_generation at trivial/simple complexity.
     if local_first and not require_vision and not require_tools:
         from efficient.local_engine import LocalEngine
+
         engine = LocalEngine()
         if engine.can_handle(intent, complexity):
             from efficient.models import _ENGINE_MODEL
+
             return RoutingDecision(
                 intent=intent,
                 complexity=complexity,
@@ -323,7 +319,9 @@ def select_model(
         # Sort by: preferred first, then by capability (lowest tier that meets requirements = cheapest)
         preferred_match = None
         for m in local_candidates:
-            if m.name == preferred_local or m.name.startswith(preferred_local.split(":", maxsplit=1)[0]):
+            if m.name == preferred_local or m.name.startswith(
+                preferred_local.split(":", maxsplit=1)[0]
+            ):
                 preferred_match = m
                 break
 

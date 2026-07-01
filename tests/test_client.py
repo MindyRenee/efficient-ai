@@ -60,7 +60,8 @@ def mock_config(tmp_path, monkeypatch):
     config = Config(
         gpu=GPUInfo(vendor="nvidia", name="RTX 4090", vram_mb=24576),
         ollama=OllamaInfo(
-            installed=True, running=True,
+            installed=True,
+            running=True,
             host="http://localhost:11434",
             models=["qwen2.5:7b", "qwen2.5:14b", "phi3:mini"],
         ),
@@ -80,6 +81,7 @@ def client(mock_config):
 
     # Init cache
     from efficient.cache import SemanticCache
+
     client.cache = SemanticCache(
         db_path=mock_config.cache_db_path,
         ollama_host="http://localhost:99999",  # Force hash embeddings
@@ -87,6 +89,7 @@ def client(mock_config):
 
     # Init mock backends — engine is real, ollama/openai are mocked
     from efficient.backends import LocalEngineBackend
+
     client.backends = {
         "engine": LocalEngineBackend(),
         "ollama": MockBackend("ollama"),
@@ -95,6 +98,7 @@ def client(mock_config):
 
     # Init router
     from efficient.router import Router
+
     client.router = Router(
         vram_gb=24,
         available_local_models=["qwen2.5:7b", "qwen2.5:14b", "phi3:mini"],
@@ -107,10 +111,12 @@ def client(mock_config):
 
     # Init telemetry
     from efficient.telemetry import Telemetry
+
     client.telemetry = Telemetry(db_path=mock_config.telemetry_db_path)
 
     # Init chat interface
     from efficient.client import ChatInterface
+
     client.chat = ChatInterface(client)
 
     return client
@@ -162,9 +168,11 @@ class TestClient:
         assert result["choices"][0]["message"]["content"]
 
     def test_streaming(self, client):
-        chunks = list(client.chat_stream(
-            messages=[{"role": "user", "content": "Hello"}],
-        ))
+        chunks = list(
+            client.chat_stream(
+                messages=[{"role": "user", "content": "Hello"}],
+            )
+        )
         assert len(chunks) > 0
         assert "".join(chunks)
 
@@ -185,7 +193,14 @@ class TestClient:
         client.backends["ollama"].chat = MagicMock(side_effect=Exception("Ollama crashed"))
 
         # This request is too complex for the engine, so it'll try ollama, then cloud
-        response = client.chat(messages=[{"role": "user", "content": "Plan and execute a complex multi-step agentic workflow with tool calls and reasoning"}])
+        response = client.chat(
+            messages=[
+                {
+                    "role": "user",
+                    "content": "Plan and execute a complex multi-step agentic workflow with tool calls and reasoning",
+                }
+            ]
+        )
         # Should have fallen back to cloud
         assert response.provider == "openai"
 
@@ -196,6 +211,8 @@ class TestClient:
         assert r1.local
 
         # Complex reasoning → engine can't handle, should escalate
-        r2 = client.chat(messages=[{"role": "user", "content": "Why is the sky blue? Explain step by step."}])
+        r2 = client.chat(
+            messages=[{"role": "user", "content": "Why is the sky blue? Explain step by step."}]
+        )
         assert r2.routing is not None
         assert r2.routing.intent == "reasoning"

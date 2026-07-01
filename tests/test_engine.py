@@ -70,13 +70,21 @@ class TestSentimentClassification:
 
 class TestCategoryClassification:
     def test_technology(self):
-        assert _classify_category("The software uses machine learning algorithms to process data.") == "technology"
+        assert (
+            _classify_category("The software uses machine learning algorithms to process data.")
+            == "technology"
+        )
 
     def test_business(self):
-        assert _classify_category("The company's revenue and profit growth this quarter.") == "business"
+        assert (
+            _classify_category("The company's revenue and profit growth this quarter.")
+            == "business"
+        )
 
     def test_science(self):
-        assert _classify_category("The research study experiments with quantum physics.") == "science"
+        assert (
+            _classify_category("The research study experiments with quantum physics.") == "science"
+        )
 
     def test_general(self):
         assert _classify_category("Hello world") == "general"
@@ -266,6 +274,7 @@ class TestStructuredOutput:
         text = "Contact John at john@example.com or call 555-123-4567"
         result = _to_json(text, [])
         import json
+
         data = json.loads(result)
         assert "emails" in data or "phones" in data
 
@@ -273,6 +282,7 @@ class TestStructuredOutput:
         text = "Just some plain text without entities"
         result = _to_json(text, [])
         import json
+
         data = json.loads(result)
         assert "text" in data
 
@@ -320,7 +330,9 @@ class TestLocalEngine:
 
     def test_generate_classification(self, engine):
         result = engine.generate(
-            messages=[{"role": "user", "content": "Classify the sentiment of: 'I love this product!'"}],
+            messages=[
+                {"role": "user", "content": "Classify the sentiment of: 'I love this product!'"}
+            ],
             intent="classification",
             complexity="simple",
         )
@@ -329,7 +341,9 @@ class TestLocalEngine:
 
     def test_generate_extraction(self, engine):
         result = engine.generate(
-            messages=[{"role": "user", "content": "Extract the email from: Contact john@example.com"}],
+            messages=[
+                {"role": "user", "content": "Extract the email from: Contact john@example.com"}
+            ],
             intent="extraction",
             complexity="simple",
         )
@@ -381,7 +395,10 @@ class TestLocalEngine:
 
     def test_rag_basic(self, engine):
         messages = [
-            {"role": "system", "content": "The revenue for Q3 2024 was $5.2 million, up 15% from Q2. The company employs 250 people across three offices."},
+            {
+                "role": "system",
+                "content": "The revenue for Q3 2024 was $5.2 million, up 15% from Q2. The company employs 250 people across three offices.",
+            },
             {"role": "user", "content": "What was the revenue for Q3?"},
         ]
         result = engine.generate(

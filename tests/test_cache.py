@@ -90,4 +90,4 @@ class TestSemanticCache:
         cache.get("q1")
         cache.put("q4", "r4", "m")  # Should evict q2 (least recently accessed)
         assert cache.get("q1") is not None  # Still present
-        assert cache.get("q2") is None      # Evicted
+        assert cache.get("q2") is None  # Evicted

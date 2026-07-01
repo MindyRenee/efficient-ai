@@ -21,13 +21,14 @@ import httpx
 
 # ─── Data Classes ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class GPUInfo:
     """Detected GPU information."""
 
-    vendor: str = "unknown"           # nvidia, apple, amd, none
+    vendor: str = "unknown"  # nvidia, apple, amd, none
     name: str = "unknown"
-    vram_mb: int = 0                  # VRAM in MB (unified memory for Apple)
+    vram_mb: int = 0  # VRAM in MB (unified memory for Apple)
     compute_capability: str = ""
     device_count: int = 0
 
@@ -60,8 +61,9 @@ class CloudKeys:
 
     @property
     def any_available(self) -> bool:
-        return any([self.openai, self.anthropic, self.gemini,
-                    self.openrouter, self.groq, self.together])
+        return any(
+            [self.openai, self.anthropic, self.gemini, self.openrouter, self.groq, self.together]
+        )
 
     def available_providers(self) -> list[str]:
         providers = []
@@ -96,8 +98,8 @@ class Config:
     cloud: CloudKeys = field(default_factory=CloudKeys)
 
     # Routing preferences
-    local_first: bool = True          # Try local before cloud
-    cache_enabled: bool = True        # Semantic caching
+    local_first: bool = True  # Try local before cloud
+    cache_enabled: bool = True  # Semantic caching
     cache_similarity_threshold: float = 0.92
     cache_db_path: str = ""
 
@@ -111,7 +113,7 @@ class Config:
     telemetry_db_path: str = ""
 
     # Behavior
-    auto_pull_models: bool = False    # Auto `ollama pull` if model missing
+    auto_pull_models: bool = False  # Auto `ollama pull` if model missing
     max_retries: int = 2
     timeout_seconds: float = 120.0
 
@@ -263,7 +265,9 @@ class Config:
             "=" * 50,
             "",
             f"GPU: {self.gpu.name} ({self.gpu.vendor})",
-            f"  VRAM: {self.gpu.vram_mb / 1024:.1f} GB" if self.gpu.vram_mb else "  VRAM: not detected",
+            f"  VRAM: {self.gpu.vram_mb / 1024:.1f} GB"
+            if self.gpu.vram_mb
+            else "  VRAM: not detected",
             f"  Available: {'yes' if self.gpu.available else 'no'}",
             "",
             f"Ollama: {'installed' if self.ollama.installed else 'not installed'}",
@@ -286,6 +290,7 @@ class Config:
 
 # ─── Detection Functions ───────────────────────────────────────────────────────
 
+
 def _detect_gpu() -> GPUInfo:
     """Detect available GPU hardware."""
     info = GPUInfo()
@@ -295,9 +300,14 @@ def _detect_gpu() -> GPUInfo:
     if nvidia_smi:
         try:
             result = subprocess.run(
-                [nvidia_smi, "--query-gpu=name,memory.total,compute_cap",
-                 "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=5,
+                [
+                    nvidia_smi,
+                    "--query-gpu=name,memory.total,compute_cap",
+                    "--format=csv,noheader,nounits",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode == 0 and result.stdout.strip():
                 lines = result.stdout.strip().split("\n")
@@ -317,20 +327,27 @@ def _detect_gpu() -> GPUInfo:
         try:
             result = subprocess.run(
                 ["system_profiler", "SPDisplaysDataType", "-json"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode == 0:
                 data = json.loads(result.stdout)
                 displays = data.get("SPDisplaysDataType", [])
                 for gpu_data in displays:
                     vendor = gpu_data.get("spdisplays_vendor", "")
-                    if "apple" in vendor.lower() or "apple" in gpu_data.get("spdisplays_device_name", "").lower():
+                    if (
+                        "apple" in vendor.lower()
+                        or "apple" in gpu_data.get("spdisplays_device_name", "").lower()
+                    ):
                         info.vendor = "apple"
                         info.name = gpu_data.get("spdisplays_device_name", "Apple Silicon")
                         # Apple unified memory — read total system RAM as proxy
                         mem_result = subprocess.run(
                             ["sysctl", "-n", "hw.memsize"],
-                            capture_output=True, text=True, timeout=5,
+                            capture_output=True,
+                            text=True,
+                            timeout=5,
                         )
                         if mem_result.returncode == 0:
                             total_bytes = int(mem_result.stdout.strip())
@@ -346,7 +363,9 @@ def _detect_gpu() -> GPUInfo:
         try:
             result = subprocess.run(
                 [rocm_smi, "--showmeminfo", "vram", "--json"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode == 0 and result.stdout.strip():
                 data = json.loads(result.stdout)
@@ -420,10 +439,18 @@ def _recommend_local_model(gpu: GPUInfo, ollama: OllamaInfo) -> str:
     if ollama.models:
         # Prefer models we know are good
         priority = [
-            "qwen2.5:72b", "qwen2.5:32b", "qwen2.5:14b", "qwen2.5:7b",
-            "llama3.3:70b", "llama3.1:8b",
-            "deepseek-v4:flash", "deepseek-r1:14b", "deepseek-r1:7b",
-            "mistral:7b", "gemma2:9b", "phi3:mini",
+            "qwen2.5:72b",
+            "qwen2.5:32b",
+            "qwen2.5:14b",
+            "qwen2.5:7b",
+            "llama3.3:70b",
+            "llama3.1:8b",
+            "deepseek-v4:flash",
+            "deepseek-r1:14b",
+            "deepseek-r1:7b",
+            "mistral:7b",
+            "gemma2:9b",
+            "phi3:mini",
         ]
         for model in priority:
             for installed in ollama.models:
@@ -434,13 +461,13 @@ def _recommend_local_model(gpu: GPUInfo, ollama: OllamaInfo) -> str:
 
     # Recommend based on VRAM at Q4_K_M
     if vram_gb >= 48:
-        return "qwen2.5:32b"       # 32B at Q4 ≈ 20GB, fits comfortably
+        return "qwen2.5:32b"  # 32B at Q4 ≈ 20GB, fits comfortably
     if vram_gb >= 24:
-        return "qwen2.5:14b"       # 14B at Q4 ≈ 9GB
+        return "qwen2.5:14b"  # 14B at Q4 ≈ 9GB
     if vram_gb >= 12:
-        return "qwen2.5:7b"        # 7B at Q4 ≈ 4.5GB
+        return "qwen2.5:7b"  # 7B at Q4 ≈ 4.5GB
     if vram_gb >= 8:
-        return "llama3.1:8b"       # 8B at Q4 ≈ 5GB
+        return "llama3.1:8b"  # 8B at Q4 ≈ 5GB
     if vram_gb >= 4:
-        return "phi3:mini"         # 3.8B at Q4 ≈ 2.3GB
-    return "qwen2.5:7b"        # Will run on CPU, slowly
+        return "phi3:mini"  # 3.8B at Q4 ≈ 2.3GB
+    return "qwen2.5:7b"  # Will run on CPU, slowly

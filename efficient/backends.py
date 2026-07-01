@@ -75,6 +75,7 @@ class Backend:
 
 # ─── Ollama Backend (Local) ───────────────────────────────────────────────────
 
+
 class OllamaBackend(Backend):
     """Local inference via Ollama.
 
@@ -197,6 +198,7 @@ class OllamaBackend(Backend):
 
 # ─── OpenAI-Compatible Backend (Cloud) ────────────────────────────────────────
 
+
 class OpenAICompatibleBackend(Backend):
     """Cloud inference via any OpenAI-compatible API.
 
@@ -254,8 +256,7 @@ class OpenAICompatibleBackend(Backend):
 
         if tools:
             payload["tools"] = [
-                {"type": "function", "function": t} if "function" not in t else t
-                for t in tools
+                {"type": "function", "function": t} if "function" not in t else t for t in tools
             ]
 
         if response_format:
@@ -302,8 +303,7 @@ class OpenAICompatibleBackend(Backend):
 
         if tools:
             payload["tools"] = [
-                {"type": "function", "function": t} if "function" not in t else t
-                for t in tools
+                {"type": "function", "function": t} if "function" not in t else t for t in tools
             ]
 
         if response_format:
@@ -329,6 +329,7 @@ class OpenAICompatibleBackend(Backend):
 
 
 # ─── LocalEngine Backend (Embedded, no LLM) ───────────────────────────────────
+
 
 class LocalEngineBackend(Backend):
     """Backend wrapping the embedded LocalEngine.
@@ -401,8 +402,12 @@ class LocalEngineBackend(Backend):
     ) -> Iterator[str]:
         # Engine is so fast that streaming is pointless — just yield the whole thing
         result = self.chat(
-            model=model, messages=messages, temperature=temperature,
-            max_tokens=max_tokens, tools=tools, response_format=response_format,
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            tools=tools,
+            response_format=response_format,
             **kwargs,
         )
         yield result.content
@@ -410,7 +415,6 @@ class LocalEngineBackend(Backend):
 
 class EngineCannotHandleError(Exception):
     """Raised when the LocalEngine can't handle a request."""
-
 
 
 # ─── Backend Factory ───────────────────────────────────────────────────────────

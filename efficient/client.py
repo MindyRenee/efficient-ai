@@ -69,18 +69,20 @@ class ChatResponse:
     def to_openai_format(self) -> dict:
         """Convert to OpenAI API response format for drop-in compatibility."""
         return {
-            "id": f"chatcmpl-efficient-{int(time.time()*1000)}",
+            "id": f"chatcmpl-efficient-{int(time.time() * 1000)}",
             "object": "chat.completion",
             "created": int(time.time()),
             "model": self.model,
-            "choices": [{
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": self.content,
-                },
-                "finish_reason": self.finish_reason,
-            }],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": self.content,
+                    },
+                    "finish_reason": self.finish_reason,
+                }
+            ],
             "usage": {
                 "prompt_tokens": self.input_tokens,
                 "completion_tokens": self.output_tokens,
@@ -110,13 +112,13 @@ _FRONTIER_REFERENCE = {
 
 def _compute_frontier_cost(input_tokens: int, output_tokens: int) -> float:
     """What would this cost on GPT-5?"""
-    return (
-        (input_tokens / 1_000_000) * _FRONTIER_REFERENCE["input_price_per_m"]
-        + (output_tokens / 1_000_000) * _FRONTIER_REFERENCE["output_price_per_m"]
-    )
+    return (input_tokens / 1_000_000) * _FRONTIER_REFERENCE["input_price_per_m"] + (
+        output_tokens / 1_000_000
+    ) * _FRONTIER_REFERENCE["output_price_per_m"]
 
 
 # ─── Main Client ───────────────────────────────────────────────────────────────
+
 
 class Client:
     """Drop-in OpenAI replacement with stacked optimizations.
@@ -218,7 +220,9 @@ class Client:
 
         """
         if stream:
-            return self._stream_as_response(messages, model, temperature, max_tokens, tools, response_format, **kwargs)
+            return self._stream_as_response(
+                messages, model, temperature, max_tokens, tools, response_format, **kwargs
+            )
 
         # Determine routing
         if model == "auto":
@@ -226,8 +230,10 @@ class Client:
                 messages,
                 require_tools=tools is not None,
                 require_vision=any(
-                    isinstance(m.get("content"), list) and
-                    any(p.get("type") == "image_url" for p in m["content"] if isinstance(p, dict))
+                    isinstance(m.get("content"), list)
+                    and any(
+                        p.get("type") == "image_url" for p in m["content"] if isinstance(p, dict)
+                    )
                     for m in messages
                 ),
                 require_json=response_format is not None,
@@ -244,6 +250,7 @@ class Client:
             if model_info is None:
                 raise ValueError(f"Unknown model: {model}")
             from efficient.router import RoutingDecision
+
             decision = RoutingDecision(
                 intent="user-specified",
                 complexity="unknown",
@@ -449,9 +456,12 @@ class Client:
             if model_info is None:
                 raise ValueError(f"Unknown model: {model}")
             from efficient.router import RoutingDecision
+
             decision = RoutingDecision(
-                intent="user-specified", complexity="unknown",
-                tier=model_info.tier, model=model_info,
+                intent="user-specified",
+                complexity="unknown",
+                tier=model_info.tier,
+                model=model_info,
                 reason=f"User specified '{model}'",
             )
 
@@ -506,23 +516,25 @@ class Client:
     def _cloud_fallback(self, local_decision: RoutingDecision) -> RoutingDecision | None:
         """Create a cloud fallback routing decision."""
         from efficient.router import RoutingDecision
+
         # Find cheapest cloud model at same or higher tier
         for m in cloud_models():
             if m.tier >= local_decision.tier and m.provider in self.backends:
-                    return RoutingDecision(
-                        intent=local_decision.intent,
-                        complexity=local_decision.complexity,
-                        tier=local_decision.tier,
-                        model=m,
-                        reason=f"Cloud fallback after local failure — '{m.name}'",
-                        use_cache=True,
-                    )
+                return RoutingDecision(
+                    intent=local_decision.intent,
+                    complexity=local_decision.complexity,
+                    tier=local_decision.tier,
+                    model=m,
+                    reason=f"Cloud fallback after local failure — '{m.name}'",
+                    use_cache=True,
+                )
         return None
 
     def _ollama_fallback(self, engine_decision: RoutingDecision) -> RoutingDecision | None:
         """Create an Ollama fallback when the engine can't handle a request."""
         from efficient.models import local_models as _local_models
         from efficient.router import RoutingDecision
+
         # Find best Ollama model at the required tier
         ollama_models = [m for m in _local_models() if m.provider == "ollama"]
         vram_gb = self.config.gpu.vram_mb / 1024 if self.config.gpu.available else 0
@@ -531,8 +543,10 @@ class Client:
                 if vram_gb > 0 and m.vram_required_gb > vram_gb:
                     continue
                 # Check if model is installed
-                installed = any(m.name in name or name.startswith(m.name.split(":")[0])
-                               for name in self.config.ollama.models)
+                installed = any(
+                    m.name in name or name.startswith(m.name.split(":")[0])
+                    for name in self.config.ollama.models
+                )
                 if installed:
                     return RoutingDecision(
                         intent=engine_decision.intent,
@@ -644,6 +658,7 @@ class Client:
 
 
 # ─── OpenAI-Compatible Interface ──────────────────────────────────────────────
+
 
 class ChatInterface:
     """OpenAI-compatible chat interface.

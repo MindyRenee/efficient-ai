@@ -5,7 +5,6 @@ Run with: python -m pytest benchmarks/benchmark.py --benchmark-only
 Requires: pip install pytest-benchmark
 """
 
-
 import pytest
 
 from efficient.cache import SemanticCache

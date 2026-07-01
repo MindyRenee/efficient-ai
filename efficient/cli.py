@@ -38,7 +38,9 @@ def main():
 
     # Report
     report_parser = subparsers.add_parser("report", help="Show impact report")
-    report_parser.add_argument("--hours", type=float, default=24.0, help="Hours to report on (default: 24)")
+    report_parser.add_argument(
+        "--hours", type=float, default=24.0, help="Hours to report on (default: 24)"
+    )
 
     # Chat
     chat_parser = subparsers.add_parser("chat", help="Interactive chat REPL")
@@ -46,7 +48,9 @@ def main():
 
     # Pull
     pull_parser = subparsers.add_parser("pull", help="Pull recommended models via Ollama")
-    pull_parser.add_argument("--model", default="", help="Specific model to pull (default: recommended)")
+    pull_parser.add_argument(
+        "--model", default="", help="Specific model to pull (default: recommended)"
+    )
 
     # Clear
     clear_parser = subparsers.add_parser("clear", help="Clear cache and/or telemetry")
@@ -55,15 +59,25 @@ def main():
     clear_parser.add_argument("--all", action="store_true", help="Clear everything (default)")
 
     # Bench
-    bench_parser = subparsers.add_parser("bench", help="Benchmark engine vs Ollama vs cloud on real tasks")
-    bench_parser.add_argument("--queries", type=int, default=0, help="(unused, kept for compatibility)")
+    bench_parser = subparsers.add_parser(
+        "bench", help="Benchmark engine vs Ollama vs cloud on real tasks"
+    )
+    bench_parser.add_argument(
+        "--queries", type=int, default=0, help="(unused, kept for compatibility)"
+    )
 
     # Serve
-    serve_parser = subparsers.add_parser("serve", help="Start x402-enabled OpenAI-compatible proxy server")
+    serve_parser = subparsers.add_parser(
+        "serve", help="Start x402-enabled OpenAI-compatible proxy server"
+    )
     serve_parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0)")
     serve_parser.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
-    serve_parser.add_argument("--wallet", default="", help="EVM wallet address for receiving x402 payments")
-    serve_parser.add_argument("--network", default="eip155:8453", help="CAIP-2 network (default: Base mainnet)")
+    serve_parser.add_argument(
+        "--wallet", default="", help="EVM wallet address for receiving x402 payments"
+    )
+    serve_parser.add_argument(
+        "--network", default="eip155:8453", help="CAIP-2 network (default: Base mainnet)"
+    )
 
     args = parser.parse_args()
 
@@ -109,9 +123,13 @@ def cmd_setup():
         print(f"  Running: {'yes' if config.ollama.running else 'no'}")
         if config.ollama.running:
             print(f"  Version: {config.ollama.version}")
-            print(f"  Models: {', '.join(config.ollama.models) if config.ollama.models else 'none'}")
+            print(
+                f"  Models: {', '.join(config.ollama.models) if config.ollama.models else 'none'}"
+            )
 
-    print(f"\nCloud providers detected: {', '.join(config.cloud.available_providers()) if config.cloud.any_available else 'none'}")
+    print(
+        f"\nCloud providers detected: {', '.join(config.cloud.available_providers()) if config.cloud.any_available else 'none'}"
+    )
 
     print(f"\nRecommended local model: {config.preferred_local_model or 'none'}")
 
@@ -191,8 +209,14 @@ def cmd_chat(model: str):
                 # Re-route to show decision (the actual call already routed)
                 decision = client.router.route(messages)
                 provider_tag = "LOCAL" if decision.model.is_local else "CLOUD"
-                cost_tag = f"${0:.4f}" if decision.model.is_local else f"${decision.model.avg_price_per_m:.2f}/M"
-                print(f"  [{provider_tag}] {decision.model.name} | {decision.intent} | {decision.complexity} | {cost_tag}")
+                cost_tag = (
+                    f"${0:.4f}"
+                    if decision.model.is_local
+                    else f"${decision.model.avg_price_per_m:.2f}/M"
+                )
+                print(
+                    f"  [{provider_tag}] {decision.model.name} | {decision.intent} | {decision.complexity} | {cost_tag}"
+                )
             print()
         except Exception as e:
             print(f"\nError: {e}\n")
@@ -261,48 +285,99 @@ def cmd_clear(cache: bool, telemetry: bool, all_flag: bool):
 # ─── Benchmark ─────────────────────────────────────────────────────────────────
 
 _BENCH_CATEGORIES = [
-    {"name": "Arithmetic", "queries": [
-        {"role": "user", "content": "What is 15 * 12?"},
-        {"role": "user", "content": "What is 100 / 7?"},
-        {"role": "user", "content": "What is 2 + 2?"},
-        {"role": "user", "content": "What is 50 - 23?"},
-    ]},
-    {"name": "Summarization", "queries": [
-        {"role": "user", "content": "Summarize: The weather today is sunny with a high of 75 degrees and light winds from the west. Tomorrow will bring rain showers in the afternoon with cooler temperatures around 60 degrees. The weekend looks clear and pleasant."},
-        {"role": "user", "content": "Summarize: Artificial intelligence has transformed how we interact with technology. From voice assistants to recommendation systems, AI is everywhere. However, the computational cost of running large models is enormous, requiring massive data centers that consume vast amounts of energy and water."},
-    ]},
-    {"name": "Classification", "queries": [
-        {"role": "user", "content": "Classify the sentiment of: 'I love this product, it works great!' as positive, negative, or neutral."},
-        {"role": "user", "content": "Classify the sentiment of: 'This is the worst experience ever, terrible service.' as positive, negative, or neutral."},
-    ]},
-    {"name": "Extraction", "queries": [
-        {"role": "user", "content": "Extract emails from: Contact john@test.com or jane@example.org for details."},
-        {"role": "user", "content": "Extract phone numbers from: Call 555-1234 or (123) 456-7890 for support."},
-    ]},
-    {"name": "Code Gen", "queries": [
-        {"role": "user", "content": "Write a Python function that returns the factorial of n."},
-        {"role": "user", "content": "Write a Python function to check if a string is a palindrome."},
-        {"role": "user", "content": "Write a Python function to sort a list using bubble sort."},
-    ]},
-    {"name": "Knowledge Q&A", "queries": [
-        {"role": "user", "content": "What is the capital of France?"},
-        {"role": "user", "content": "Who invented Python?"},
-        {"role": "user", "content": "What is the speed of light?"},
-        {"role": "user", "content": "What is machine learning?"},
-    ]},
-    {"name": "Algebra", "queries": [
-        {"role": "user", "content": "Solve 2x + 3 = 7"},
-        {"role": "user", "content": "Solve 3x - 5 = 16"},
-        {"role": "user", "content": "Solve x^2 - 5x + 6 = 0"},
-    ]},
-    {"name": "Translation", "queries": [
-        {"role": "user", "content": "Translate to Spanish: hello and goodbye"},
-        {"role": "user", "content": "Translate to French: thank you and yes"},
-    ]},
-    {"name": "Unit Conversion", "queries": [
-        {"role": "user", "content": "Convert 100 feet to meters"},
-        {"role": "user", "content": "Convert 25 Celsius to Fahrenheit"},
-    ]},
+    {
+        "name": "Arithmetic",
+        "queries": [
+            {"role": "user", "content": "What is 15 * 12?"},
+            {"role": "user", "content": "What is 100 / 7?"},
+            {"role": "user", "content": "What is 2 + 2?"},
+            {"role": "user", "content": "What is 50 - 23?"},
+        ],
+    },
+    {
+        "name": "Summarization",
+        "queries": [
+            {
+                "role": "user",
+                "content": "Summarize: The weather today is sunny with a high of 75 degrees and light winds from the west. Tomorrow will bring rain showers in the afternoon with cooler temperatures around 60 degrees. The weekend looks clear and pleasant.",
+            },
+            {
+                "role": "user",
+                "content": "Summarize: Artificial intelligence has transformed how we interact with technology. From voice assistants to recommendation systems, AI is everywhere. However, the computational cost of running large models is enormous, requiring massive data centers that consume vast amounts of energy and water.",
+            },
+        ],
+    },
+    {
+        "name": "Classification",
+        "queries": [
+            {
+                "role": "user",
+                "content": "Classify the sentiment of: 'I love this product, it works great!' as positive, negative, or neutral.",
+            },
+            {
+                "role": "user",
+                "content": "Classify the sentiment of: 'This is the worst experience ever, terrible service.' as positive, negative, or neutral.",
+            },
+        ],
+    },
+    {
+        "name": "Extraction",
+        "queries": [
+            {
+                "role": "user",
+                "content": "Extract emails from: Contact john@test.com or jane@example.org for details.",
+            },
+            {
+                "role": "user",
+                "content": "Extract phone numbers from: Call 555-1234 or (123) 456-7890 for support.",
+            },
+        ],
+    },
+    {
+        "name": "Code Gen",
+        "queries": [
+            {"role": "user", "content": "Write a Python function that returns the factorial of n."},
+            {
+                "role": "user",
+                "content": "Write a Python function to check if a string is a palindrome.",
+            },
+            {
+                "role": "user",
+                "content": "Write a Python function to sort a list using bubble sort.",
+            },
+        ],
+    },
+    {
+        "name": "Knowledge Q&A",
+        "queries": [
+            {"role": "user", "content": "What is the capital of France?"},
+            {"role": "user", "content": "Who invented Python?"},
+            {"role": "user", "content": "What is the speed of light?"},
+            {"role": "user", "content": "What is machine learning?"},
+        ],
+    },
+    {
+        "name": "Algebra",
+        "queries": [
+            {"role": "user", "content": "Solve 2x + 3 = 7"},
+            {"role": "user", "content": "Solve 3x - 5 = 16"},
+            {"role": "user", "content": "Solve x^2 - 5x + 6 = 0"},
+        ],
+    },
+    {
+        "name": "Translation",
+        "queries": [
+            {"role": "user", "content": "Translate to Spanish: hello and goodbye"},
+            {"role": "user", "content": "Translate to French: thank you and yes"},
+        ],
+    },
+    {
+        "name": "Unit Conversion",
+        "queries": [
+            {"role": "user", "content": "Convert 100 feet to meters"},
+            {"role": "user", "content": "Convert 25 Celsius to Fahrenheit"},
+        ],
+    },
 ]
 
 
@@ -319,7 +394,9 @@ def cmd_bench(n_queries: int):
     # ── Part 1: Engine-only (always available, zero cost) ──
     print("\n  ENGINE-ONLY (deterministic, no network, no model)")
     print("  " + "-" * 66)
-    print(f"  {'Category':<18} {'#':<3} {'Intent':<16} {'Latency':<10} {'OK':<4} {'Response (truncated)'}")
+    print(
+        f"  {'Category':<18} {'#':<3} {'Intent':<16} {'Latency':<10} {'OK':<4} {'Response (truncated)'}"
+    )
     print("  " + "-" * 100)
 
     engine_times = []
@@ -337,7 +414,9 @@ def cmd_bench(n_queries: int):
                 intent, complexity = "unknown", "unknown"
 
             start = time.time()
-            engine_resp = engine.generate(messages=[{"role": "user", "content": query}], intent=intent, complexity=complexity)
+            engine_resp = engine.generate(
+                messages=[{"role": "user", "content": query}], intent=intent, complexity=complexity
+            )
             elapsed_ms = (time.time() - start) * 1000
             engine_times.append(elapsed_ms)
 
@@ -348,7 +427,9 @@ def cmd_bench(n_queries: int):
             else:
                 preview = "(would escalate)"
 
-            print(f"  {category['name']:<18} {i+1:<3} {intent:<16} {elapsed_ms:<8.2f}ms {ok:<4} {preview}")
+            print(
+                f"  {category['name']:<18} {i + 1:<3} {intent:<16} {elapsed_ms:<8.2f}ms {ok:<4} {preview}"
+            )
 
     print("\n  " + "─" * 66)
     avg_e = sum(engine_times) / len(engine_times) if engine_times else 0
@@ -368,7 +449,9 @@ def cmd_bench(n_queries: int):
     # ── Part 2: Full pipeline (engine → Ollama → cloud) ──
     print("\n\n  FULL PIPELINE (engine → Ollama → cloud)")
     print("  " + "-" * 66)
-    print(f"  {'Category':<18} {'#':<3} {'Provider':<10} {'Model':<22} {'Latency':<10} {'Cost':<10} {'Cached'}")
+    print(
+        f"  {'Category':<18} {'#':<3} {'Provider':<10} {'Model':<22} {'Latency':<10} {'Cost':<10} {'Cached'}"
+    )
     print("  " + "-" * 95)
 
     pipeline_times = []
@@ -398,11 +481,11 @@ def cmd_bench(n_queries: int):
 
                 cached = "yes" if resp.cache_hit else "no"
                 print(
-                    f"  {category['name']:<18} {i+1:<3} {resp.provider:<10} "
+                    f"  {category['name']:<18} {i + 1:<3} {resp.provider:<10} "
                     f"{resp.model[:22]:<22} {elapsed_ms:<8.0f}ms ${resp.cost:<9.6f} {cached}",
                 )
             except Exception as e:
-                print(f"  {category['name']:<18} {i+1:<3} ERROR: {str(e)[:60]}")
+                print(f"  {category['name']:<18} {i + 1:<3} ERROR: {str(e)[:60]}")
 
     print("\n  " + "─" * 66)
     avg_p = sum(pipeline_times) / len(pipeline_times) if pipeline_times else 0
@@ -442,6 +525,7 @@ def cmd_bench(n_queries: int):
 def cmd_serve(host: str, port: int, wallet: str, network: str):
     """Start the x402-enabled OpenAI-compatible proxy server."""
     from efficient.proxy import run_server
+
     run_server(host=host, port=port, wallet_address=wallet, network=network)
 
 

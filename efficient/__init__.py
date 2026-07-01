@@ -21,22 +21,33 @@ from efficient.local_engine import LocalEngine
 from efficient.telemetry import Telemetry
 
 __version__ = "0.1.0"
-__all__ = ["Client", "Config", "LocalEngine", "Telemetry", "create_app", "patch_openai", "run_server"]
+__all__ = [
+    "Client",
+    "Config",
+    "LocalEngine",
+    "Telemetry",
+    "create_app",
+    "patch_openai",
+    "run_server",
+]
 
 
 def patch_openai(client=None):
     """Monkey-patch the OpenAI SDK to route through Efficient AI."""
     from efficient.openai_shim import patch_openai as _patch
+
     return _patch(client)
 
 
 def create_app(*args, **kwargs):
     """Create the x402-enabled proxy server app."""
     from efficient.proxy import create_app as _create
+
     return _create(*args, **kwargs)
 
 
 def run_server(*args, **kwargs):
     """Run the x402 proxy server."""
     from efficient.proxy import run_server as _run
+
     return _run(*args, **kwargs)
