@@ -1,7 +1,7 @@
 services:
   - type: web
     name: efficient-ai-proxy
-    env: docker
+    runtime: docker
     plan: free
     healthCheckPath: /health
     envVars:
@@ -13,6 +13,3 @@ services:
         value: https://x402.org/facilitator
       - key: PORT
         value: 8000
-    ports:
-      - port: 8000
-        protocol: TCP
