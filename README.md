@@ -17,14 +17,14 @@ The data center crisis isn't a construction problem — it's a **developer exper
 
 Efficient AI stacks six optimizations behind a single API:
 
-| Optimization | What It Does | Savings |
+|Optimization|What It Does|Savings|
 |---|---|---|
-| **Embedded engine** | Deterministic algorithms handle text processing directly in Python — no LLM needed | 80% of queries, $0, <1ms |
-| **Semantic caching** | Detects duplicate/similar queries, serves cached response | 30-50% of calls eliminated |
-| **Intent classification** | Routes to cheapest capable backend | 45-85% cost reduction |
-| **Local-first inference** | Falls back to Ollama on your hardware for tasks the engine can't handle | $0/token, 90% less energy |
-| **Quantization awareness** | Picks Q4_K_M sweet spot (1.4 MMLU point loss) | 70-75% memory reduction |
-| **Speculative decoding** | Small draft model guesses, large model verifies | 2-3x throughput |
+|**Embedded engine**|Deterministic algorithms handle text processing directly in Python — no LLM needed|80% of queries, $0, <1ms|
+|**Semantic caching**|Detects duplicate/similar queries, serves cached response|30-50% of calls eliminated|
+|**Intent classification**|Routes to cheapest capable backend|45-85% cost reduction|
+|**Local-first inference**|Falls back to Ollama on your hardware for tasks the engine can't handle|$0/token, 90% less energy|
+|**Quantization awareness**|Picks Q4_K_M sweet spot (1.4 MMLU point loss)|70-75% memory reduction|
+|**Speculative decoding**|Small draft model guesses, large model verifies|2-3x throughput|
 
 **Combined: 88% of queries never touch a data center. 90% lower cost. Sub-1ms latency for most requests.**
 
@@ -131,7 +131,7 @@ efficient serve      # Start x402-enabled OpenAI-compatible proxy server
 
 ## How It Works
 
-```
+```text
 User Request
     │
     ▼
@@ -169,7 +169,7 @@ User Request
 
 Run `efficient report` to see your impact:
 
-```
+```text
 Efficient AI — Impact Report
 ============================================================
 Period: last 24h
@@ -204,23 +204,23 @@ Period: last 24h
 
 ### Local Models (Ollama — $0/token)
 
-| Model | Params | VRAM (Q4) | MMLU | Tier | Speculative |
+|Model|Params|VRAM (Q4)|MMLU|Tier|Speculative|
 |---|---|---|---|---|---|
-| phi3:mini | 3.8B | 2.3 GB | 68 | MICRO | — |
-| qwen2.5:7b | 7B | 4.5 GB | 74 | SMALL | ✓ |
-| llama3.1:8b | 8B | 5.0 GB | 73 | SMALL | — |
-| qwen2.5:14b | 14B | 9.0 GB | 79 | MID | ✓ |
-| qwen2.5:32b | 32B | 20 GB | 83.2 | MID | ✓ |
-| llama3.3:70b | 70B | 40 GB | 83.1 | LARGE | — |
+|phi3:mini|3.8B|2.3 GB|68|MICRO|—|
+|qwen2.5:7b|7B|4.5 GB|74|SMALL|✓|
+|llama3.1:8b|8B|5.0 GB|73|SMALL|—|
+|qwen2.5:14b|14B|9.0 GB|79|MID|✓|
+|qwen2.5:32b|32B|20 GB|83.2|MID|✓|
+|llama3.3:70b|70B|40 GB|83.1|LARGE|—|
 
 ### Cloud Models (priced per million tokens)
 
-| Model | Input $/M | Output $/M | MMLU | Tier |
+|Model|Input $/M|Output $/M|MMLU|Tier|
 |---|---|---|---|---|
-| gpt-4o-mini | $0.15 | $0.60 | 82 | SMALL |
-| deepseek-v4-flash | $0.14 | $0.28 | 80 | MID |
-| gpt-4o | $2.50 | $10.00 | 88 | LARGE |
-| gpt-5 | $5.00 | $15.00 | 90 | FRONTIER |
+|gpt-4o-mini|$0.15|$0.60|82|SMALL|
+|deepseek-v4-flash|$0.14|$0.28|80|MID|
+|gpt-4o|$2.50|$10.00|88|LARGE|
+|gpt-5|$5.00|$15.00|90|FRONTIER|
 
 ## Configuration
 
@@ -244,7 +244,7 @@ A typical app spending **$100/month** on cloud AI APIs:
 
 ## Architecture
 
-```
+```text
 efficient/
 ├── __init__.py        # Public API exports
 ├── client.py          # Main orchestrator (ChatResponse, Client, ChatInterface)
