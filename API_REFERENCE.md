@@ -127,12 +127,12 @@ Create a chat completion.
 
 **Response Headers**:
 
-| Header | Description |
+|Header|Description|
 |--------|-------------|
-| `X-Tier` | Backend used (`engine`, `ollama`, `cloud`) |
-| `X-Price` | Price charged for this request |
-| `X-Model` | Model used |
-| `X-Latency-ms` | Request latency in milliseconds |
+|`X-Tier`|Backend used (`engine`, `ollama`, `cloud`)|
+|`X-Price`|Price charged for this request|
+|`X-Model`|Model used|
+|`X-Latency-ms`|Request latency in milliseconds|
 
 **Example**:
 
@@ -323,20 +323,20 @@ data: [DONE]
 
 ### Default Limits
 
-| Plan | Requests/Minute | Requests/Day |
+|Plan|Requests/Minute|Requests/Day|
 |------|-----------------|--------------|
-| Free | 10 | 1,000 |
-| Basic | 100 | 10,000 |
-| Pro | 1,000 | 100,000 |
-| Enterprise | Custom | Custom |
+|Free|10|1,000|
+|Basic|100|10,000|
+|Pro|1,000|100,000|
+|Enterprise|Custom|Custom|
 
 ### Rate Limit Headers
 
-| Header | Description |
+|Header|Description|
 |--------|-------------|
-| `X-RateLimit-Limit` | Request limit |
-| `X-RateLimit-Remaining` | Remaining requests |
-| `X-RateLimit-Reset` | Unix timestamp when limit resets |
+|`X-RateLimit-Limit`|Request limit|
+|`X-RateLimit-Remaining`|Remaining requests|
+|`X-RateLimit-Reset`|Unix timestamp when limit resets|
 
 ### Rate Limit Exceeded Response
 
@@ -367,6 +367,7 @@ data: [DONE]
 **Status Code**: 402
 
 **Headers**:
+
 - `PAYMENT-REQUIRED`: Base64-encoded payment requirements
 - `X-Price`: Price in USD
 - `X-Tier`: Backend tier
@@ -394,6 +395,7 @@ data: [DONE]
 ### Payment Request
 
 **Headers**:
+
 - `PAYMENT-SIGNATURE`: Base64-encoded signed payment payload
 
 **Example**:
@@ -536,20 +538,21 @@ print(response.choices[0].message.content)
 
 When `model="auto"`, Efficient AI automatically routes to the optimal backend:
 
-| Query Type | Backend | Price | Latency |
+|Query Type|Backend|Price|Latency|
 |-------------|---------|-------|---------|
-| Simple Q&A | Engine | $0.0001 | <1ms |
-| Summarization | Engine | $0.0001 | <1ms |
-| Classification | Engine | $0.0001 | <1ms |
-| Entity extraction | Engine | $0.0001 | <1ms |
-| Code generation | Engine | $0.0001 | <1ms |
-| Complex reasoning | Ollama | $0.001 | 50-200ms |
-| Creative writing | Ollama | $0.001 | 100-300ms |
-| Agentic workflows | Cloud | $0.01 | 500-2000ms |
+|Simple Q&A|Engine|$0.0001|<1ms|
+|Summarization|Engine|$0.0001|<1ms|
+|Classification|Engine|$0.0001|<1ms|
+|Entity extraction|Engine|$0.0001|<1ms|
+|Code generation|Engine|$0.0001|<1ms|
+|Complex reasoning|Ollama|$0.001|50-200ms|
+|Creative writing|Ollama|$0.001|100-300ms|
+|Agentic workflows|Cloud|$0.01|500-2000ms|
 
 ### Specific Models
 
 **Local Models (Ollama)**:
+
 - `phi3:mini` - 3.8B params, 2.3GB VRAM
 - `qwen2.5:7b` - 7B params, 4.5GB VRAM
 - `llama3.1:8b` - 8B params, 5GB VRAM
@@ -557,6 +560,7 @@ When `model="auto"`, Efficient AI automatically routes to the optimal backend:
 - `llama3.3:70b` - 70B params, 40GB VRAM
 
 **Cloud Models**:
+
 - `gpt-4o-mini` - $0.15/M input, $0.60/M output
 - `gpt-4o` - $2.50/M input, $10.00/M output
 - `claude-3-5-haiku` - $0.80/M input, $4.00/M output
@@ -594,7 +598,7 @@ queries = ["What is 2+2?", "Capital of France?", "Summarize this text"]
 results = await asyncio.gather(*[process_query(q) for q in queries])
 ```
 
-### Error Handling
+### SDK Error Handling
 
 ```python
 from openai import OpenAI, APIError, RateLimitError
