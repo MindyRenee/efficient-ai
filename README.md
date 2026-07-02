@@ -278,7 +278,7 @@ For production deployment with x402 monetization, security hardening, and observ
 - **[Monitoring Guide](./MONITORING.md)** - Metrics, logging, tracing, alerting, dashboards
 - **[API Reference](./API_REFERENCE.md)** - Complete API documentation with x402 payment flow
 
-### Quick Production Setup
+### Self-Hosted Deployment
 
 ```bash
 # Docker deployment with x402 payments
@@ -287,19 +287,14 @@ docker-compose up -d
 # Or Kubernetes
 kubectl apply -f k8s/
 
-# Or deploy to Render (free tier)
-# https://render.com/deploy?repo=https://github.com/MindyRenee/efficient-ai
+# Or run directly
+pip install -e ".[proxy]"
+efficient serve --wallet 0x... --port 8000
 ```
 
-### Hosted API
+### x402 Payment Flow
 
-A public x402-enabled endpoint is available at:
-
-```text
-https://efficient-ai-proxy.onrender.com/v1/chat/completions
-```
-
-See `demo_client.py` for a working Python client that pays per request.
+Run the proxy locally to accept micropayments per request. See `demo_client.py` for a working client example.
 
 ## License
 

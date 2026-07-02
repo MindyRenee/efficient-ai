@@ -6,7 +6,7 @@ import httpx
 
 
 def main():
-    proxy_url = os.environ.get("EFFICIENT_PROXY_URL", "https://efficient-ai-proxy.onrender.com")
+    proxy_url = os.environ.get("EFFICIENT_PROXY_URL", "http://localhost:8000")
     private_key = os.environ.get("PRIVATE_KEY")
     if not private_key:
         print("Set PRIVATE_KEY env var to a Base wallet with USDC")
