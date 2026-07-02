@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: efficient-ai-proxy
+    env: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: EFFICIENT_WALLET
+        value: 0x13210FeC594489F5F4f3E54e6bA65b62d2C6CEA9
+      - key: EFFICIENT_NETWORK
+        value: eip155:8453
+      - key: EFFICIENT_FACILITATOR_URL
+        value: https://x402.org/facilitator
+      - key: PORT
+        value: 8000
+    ports:
+      - port: 8000
+        protocol: TCP

@@ -286,7 +286,20 @@ docker-compose up -d
 
 # Or Kubernetes
 kubectl apply -f k8s/
+
+# Or deploy to Render (free tier)
+# https://render.com/deploy?repo=https://github.com/MindyRenee/efficient-ai
 ```
+
+### Hosted API
+
+A public x402-enabled endpoint is available at:
+
+```text
+https://efficient-ai-proxy.onrender.com/v1/chat/completions
+```
+
+See `demo_client.py` for a working Python client that pays per request.
 
 ## License
 
