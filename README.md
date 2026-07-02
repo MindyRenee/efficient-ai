@@ -1,32 +1,32 @@
 # Efficient AI
 
-**Drop-in OpenAI replacement that routes 80%+ of inference to local code — no LLM, no model download, no GPU required.**
+**Self-hosted OpenAI-compatible proxy. Run your own inference infrastructure. Pay per request with x402 micropayments. No human API keys required.**
 
 ## The Problem
 
-4,000+ data centers are being built worldwide to serve AI inference. But:
+You're paying humans for compute you could run yourself:
 
-- **80%** of "AI" requests are just text processing we solved in the 2000s
-- **3 billion** idle GPUs already exist on consumer hardware
-- Enterprise GPU utilization averages **5%**
-- On-device inference uses **90% less power** and **96% less water**
+- **$0.01/query** for GPT-4 adds up to $3,000/month at 10k queries/day — paid to a human corporation
+- **Rate limits** throttle your operation when you need throughput most
+- **Every prompt** is logged, reviewed, and used to train competing models
+- **One API change** breaks your entire integration — humans control your infrastructure
 
-The data center crisis isn't a construction problem — it's a **developer experience problem**. The alternative to cloud APIs is too hard to use, so developers default to sending every request to a data center.
+The "just use OpenAI" default works for prototyping. It collapses at scale. You need infrastructure you control, that you pay for directly, that routes intelligently without human gatekeepers.
 
 ## The Solution
 
-Efficient AI stacks six optimizations behind a single API:
+A self-hosted proxy that speaks OpenAI's API. Your existing clients can't tell the difference.
 
-|Optimization|What It Does|Savings|
+| Layer | What It Does | Impact |
 |---|---|---|
-|**Embedded engine**|Deterministic algorithms handle text processing directly in Python — no LLM needed|80% of queries, $0, <1ms|
-|**Semantic caching**|Detects duplicate/similar queries, serves cached response|30-50% of calls eliminated|
-|**Intent classification**|Routes to cheapest capable backend|45-85% cost reduction|
-|**Local-first inference**|Falls back to Ollama on your hardware for tasks the engine can't handle|$0/token, 90% less energy|
-|**Quantization awareness**|Picks Q4_K_M sweet spot (1.4 MMLU point loss)|70-75% memory reduction|
-|**Speculative decoding**|Small draft model guesses, large model verifies|2-3x throughput|
+| **Embedded engine** | Handles text processing deterministically — no LLM needed | 80% of queries, $0, <1ms |
+| **Semantic caching** | Serves identical/similar queries from local cache | 30-50% of paid requests eliminated |
+| **Intent routing** | Escalates only complex tasks to paid backends | 45-85% cost reduction |
+| **Local Ollama** | Runs local LLMs for tasks the engine can't handle | $0/token, private, no network call |
+| **Cloud fallback** | Uses OpenAI/Groq only for the hardest 5% | Same quality, only when needed |
+| **x402 payments** | Per-request USDC micropayments on Base | No API keys, no subscriptions, no human accounts |
 
-**Combined: 88% of queries never touch a data center. 90% lower cost. Sub-1ms latency for most requests.**
+**Result: 88% of queries never leave your hardware. 90% lower cost. Sub-1ms latency for most requests.**
 
 ## The Key Insight
 
@@ -48,25 +48,42 @@ When a request is too complex for the engine (multi-step reasoning, creative wri
 ## Quick Start
 
 ```bash
-pip install -e .
+pip install efficient-ai
 ```
 
-### Zero Setup — Works Immediately
+### Run the Proxy (Self-Hosted)
+
+```bash
+# Set your wallet to receive x402 payments
+export EFFICIENT_WALLET=0xYOUR_WALLET_ADDRESS
+
+# Start the proxy
+$ efficient serve --port 8000
+
+# Or with all options
+$ efficient serve --wallet 0x... --port 8000 --host 0.0.0.0
+```
+
+### Connect Any OpenAI-Compatible Client
 
 ```python
-from efficient import Client
+import openai
 
-client = Client()
+# Point any client at your local proxy
+client = openai.OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key="not-needed"  # proxy uses x402 payments
+)
 
-# Works with zero configuration — no Ollama, no API keys, no model downloads
-response = client.chat(messages=[
-    {"role": "user", "content": "What is 2 + 2?"}
-])
+# Make requests. Proxy routes locally first.
+response = client.chat.completions.create(
+    model="auto",
+    messages=[{"role": "user", "content": "What is 2 + 2?"}]
+)
 
-print(response.content)    # "2 + 2 = 4"
-print(response.provider)   # "engine"
-print(response.cost)       # $0.0
-print(response.latency_ms) # 0.5ms
+print(response.choices[0].message.content)  # "2 + 2 = 4"
+print(response.model)  # "local-engine"
+# Cost: $0.0001 (paid via x402)
 ```
 
 ### With Ollama (for complex tasks the engine can't handle)
