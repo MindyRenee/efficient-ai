@@ -10,13 +10,14 @@ x402 is an AI-native payment protocol that revives the HTTP 402 "Payment Require
 
 Efficient AI uses dynamic pricing based on which backend handles the request:
 
-| Tier | Backend | Price per Request | Description |
+|Tier|Backend|Price per Request|Description|
 |------|---------|-------------------|-------------|
-| **engine** | Embedded deterministic engine | $0.0001 | 88% of queries - basically free |
-| **ollama** | Local model inference | $0.001 | Cheaper than any cloud API |
-| **cloud** | Cloud fallback (GPT-4o, etc.) | $0.01 | Pass-through + small markup |
+|**engine**|Embedded deterministic engine|$0.0001|88% of queries - basically free|
+|**ollama**|Local model inference|$0.001|Cheaper than any cloud API|
+|**cloud**|Cloud fallback (GPT-4o, etc.)|$0.01|Pass-through + small markup|
 
 **Example**: A customer making 1,000 requests would pay:
+
 - 880 engine requests @ $0.0001 = $0.088
 - 100 Ollama requests @ $0.001 = $0.10
 - 20 cloud requests @ $0.01 = $0.20
@@ -27,6 +28,7 @@ Efficient AI uses dynamic pricing based on which backend handles the request:
 ### 1. Get a Wallet Address
 
 Create an EVM wallet address to receive USDC payments:
+
 - Base mainnet (default): Use any EVM wallet (MetaMask, Coinbase Wallet, etc.)
 - Solana: Use a Solana wallet address
 
@@ -43,6 +45,7 @@ EFFICIENT_WALLET=0xYourWalletAddressHere
 ### 3. Start the Server
 
 #### Local Development
+
 ```bash
 # Install with proxy dependencies
 pip install -e ".[proxy]"
@@ -55,6 +58,7 @@ EFFICIENT_WALLET=0xYourWalletAddress efficient serve --port 8000
 ```
 
 #### Docker Deployment
+
 ```bash
 # Build and run with docker-compose
 docker-compose up -d
@@ -79,13 +83,15 @@ curl -X POST http://localhost:8000/v1/chat/completions \
 ## Payment Flow
 
 ### Without Payment (Free Mode)
-```
+
+```text
 Client → POST /v1/chat/completions
 Server → 200 OK + response (no payment required)
 ```
 
 ### With Payment (Production)
-```
+
+```text
 Client → POST /v1/chat/completions
 Server → 402 Payment Required + PAYMENT-REQUIRED header
 Client → Signs payment using x402 SDK
@@ -122,11 +128,11 @@ print(response.json())
 
 ### Environment Variables
 
-| Variable | Default | Description |
+|Variable|Default|Description|
 |----------|---------|-------------|
-| `EFFICIENT_WALLET` | (empty) | EVM wallet address to receive payments |
-| `EFFICIENT_NETWORK` | `eip155:8453` | CAIP-2 network identifier (Base mainnet) |
-| `EFFICIENT_FACILITATOR_URL` | `https://x402.org/facilitator` | x402 facilitator for payment verification |
+|`EFFICIENT_WALLET`|(empty)|EVM wallet address to receive payments|
+|`EFFICIENT_NETWORK`|`eip155:8453`|CAIP-2 network identifier (Base mainnet)|
+|`EFFICIENT_FACILITATOR_URL`|`https://x402.org/facilitator`|x402 facilitator for payment verification|
 
 ### CLI Options
 
@@ -203,6 +209,7 @@ The server includes response headers for monitoring:
 - `X-Latency-ms`: Request latency in milliseconds
 
 Use these to track:
+
 - Revenue by tier
 - Backend utilization
 - Performance metrics
@@ -217,16 +224,19 @@ Use these to track:
 ## Troubleshooting
 
 ### Server returns 402 but I have a wallet set
+
 - Check that `EFFICIENT_WALLET` is set correctly
 - Verify the wallet address format (0x...)
 - Check server logs for errors
 
 ### Payment verification fails
+
 - Verify facilitator URL is accessible
 - Check that the payment was actually sent on-chain
 - Ensure the network matches (Base vs Solana)
 
 ### Free mode not working
+
 - Server runs in free mode when `EFFICIENT_WALLET` is empty
 - Check environment variable is not set
 - Restart server after changing environment variables
