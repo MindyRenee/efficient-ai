@@ -228,7 +228,7 @@ Config is stored at `~/.efficient/config.json` and auto-detected on first run:
 
 - **GPU**: NVIDIA (nvidia-smi), Apple Silicon (system_profiler), AMD (rocm-smi)
 - **Ollama**: Binary detection, server health check, installed model list
-- **Cloud keys**: `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `TOGETHER_API_KEY`
+- **Cloud keys**: `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`
 - **Model selection**: Auto-recommends best local model based on VRAM at Q4_K_M quantization
 
 ## The Math

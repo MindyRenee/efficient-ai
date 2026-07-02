@@ -55,11 +55,10 @@ class CloudKeys:
     openai: str | None = None
     openrouter: str | None = None
     groq: str | None = None
-    together: str | None = None
 
     @property
     def any_available(self) -> bool:
-        return any([self.openai, self.openrouter, self.groq, self.together])
+        return any([self.openai, self.openrouter, self.groq])
 
     def available_providers(self) -> list[str]:
         providers = []
@@ -69,8 +68,6 @@ class CloudKeys:
             providers.append("openrouter")
         if self.groq:
             providers.append("groq")
-        if self.together:
-            providers.append("together")
         return providers
 
 
@@ -169,7 +166,6 @@ class Config:
                 "openai": self.cloud.openai,
                 "openrouter": self.cloud.openrouter,
                 "groq": self.cloud.groq,
-                "together": self.cloud.together,
             },
             "local_first": self.local_first,
             "cache_enabled": self.cache_enabled,
@@ -206,7 +202,6 @@ class Config:
                 openai=data.get("cloud", {}).get("openai"),
                 openrouter=data.get("cloud", {}).get("openrouter"),
                 groq=data.get("cloud", {}).get("groq"),
-                together=data.get("cloud", {}).get("together"),
             ),
             local_first=data.get("local_first", True),
             cache_enabled=data.get("cache_enabled", True),
@@ -411,7 +406,6 @@ def _detect_cloud_keys() -> CloudKeys:
         openai=os.environ.get("OPENAI_API_KEY"),
         openrouter=os.environ.get("OPENROUTER_API_KEY"),
         groq=os.environ.get("GROQ_API_KEY"),
-        together=os.environ.get("TOGETHER_API_KEY"),
     )
 
 

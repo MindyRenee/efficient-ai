@@ -27,7 +27,7 @@ class ModelInfo:
 
     name: str  # Canonical name
     tier: CapabilityTier
-    provider: str  # ollama, openai, groq, openrouter, together, etc.
+    provider: str  # ollama, openai, groq, openrouter, etc.
     param_count_b: float = 0  # Billions of parameters (0 for proprietary)
     context_window: int = 4096
     # Pricing per million tokens (USD), 0 for local

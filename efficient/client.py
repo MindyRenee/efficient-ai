@@ -172,7 +172,6 @@ class Client:
             "openai": cfg.cloud.openai,
             "groq": cfg.cloud.groq,
             "openrouter": cfg.cloud.openrouter,
-            "together": cfg.cloud.together,
         }
         self.backends = create_backends(
             ollama_host=cfg.ollama.host,

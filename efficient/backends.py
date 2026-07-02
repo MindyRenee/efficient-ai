@@ -2,7 +2,7 @@
 
 Provides a unified interface for:
 - Local inference via Ollama
-- Cloud inference via OpenAI-compatible APIs (OpenAI, Groq, OpenRouter, Together)
+- Cloud inference via OpenAI-compatible APIs (OpenAI, Groq, OpenRouter)
 
 All backends implement the same interface, so the client can swap
 between them transparently.
@@ -206,7 +206,7 @@ class OllamaBackend(Backend):
 class OpenAICompatibleBackend(Backend):
     """Cloud inference via any OpenAI-compatible API.
 
-    Works with: OpenAI, Groq, OpenRouter, Together, vLLM servers, etc.
+    Works with: OpenAI, Groq, OpenRouter, vLLM servers, etc.
     """
 
     def __init__(
@@ -433,7 +433,6 @@ _PROVIDER_URLS: dict[str, str] = {
     "openai": "https://api.openai.com/v1",
     "groq": "https://api.groq.com/openai/v1",
     "openrouter": "https://openrouter.ai/api/v1",
-    "together": "https://api.together.xyz/v1",
 }
 
 

@@ -27,7 +27,7 @@ class RequestRecord:
 
     timestamp: float = 0.0
     model: str = ""
-    provider: str = ""  # ollama, openai, groq, openrouter, together, etc.
+    provider: str = ""  # ollama, openai, groq, openrouter, etc.
     tier: str = ""  # micro, small, mid, large, frontier
     input_tokens: int = 0
     output_tokens: int = 0
