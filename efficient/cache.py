@@ -88,6 +88,7 @@ class SemanticCache:
         self.embedding_model = embedding_model
         self.ttl_seconds = ttl_seconds
         self._embedding_dim = 384  # default for nomic-embed-text
+        self._ollama_available: bool | None = None  # Cache Ollama availability
 
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -95,6 +96,8 @@ class SemanticCache:
     def _init_db(self) -> None:
         with self._conn() as conn:
             conn.executescript(self.SCHEMA)
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA busy_timeout=5000")
 
     def _conn(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
@@ -105,20 +108,23 @@ class SemanticCache:
 
     def _get_embedding(self, text: str) -> np.ndarray:
         """Get embedding for text. Tries Ollama first, falls back to hash-based."""
-        # Try Ollama embeddings
-        try:
-            with httpx.Client(timeout=10.0) as client:
-                resp = client.post(
-                    f"{self.ollama_host}/api/embeddings",
-                    json={"model": self.embedding_model, "prompt": text},
-                )
-                if resp.status_code == 200:
-                    emb = np.array(resp.json().get("embedding", []), dtype=np.float32)
-                    if len(emb) > 0:
-                        self._embedding_dim = len(emb)
-                        return self._normalize(emb)
-        except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPError):
-            pass
+        # Try Ollama embeddings (skip if we know it's unavailable)
+        if self._ollama_available is not False:
+            try:
+                with httpx.Client(timeout=10.0) as client:
+                    resp = client.post(
+                        f"{self.ollama_host}/api/embeddings",
+                        json={"model": self.embedding_model, "prompt": text},
+                    )
+                    if resp.status_code == 200:
+                        emb = np.array(resp.json().get("embedding", []), dtype=np.float32)
+                        if len(emb) > 0:
+                            self._embedding_dim = len(emb)
+                            self._ollama_available = True
+                            return self._normalize(emb)
+                    self._ollama_available = False
+            except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPError):
+                self._ollama_available = False
 
         # Fallback: hash-based embedding (deterministic, fast, no dependencies)
         return self._hash_embedding(text)

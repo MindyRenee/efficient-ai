@@ -37,9 +37,11 @@ from __future__ import annotations
 import base64
 import binascii
 import json
+import logging
 import os
 import time
 import uuid
+from pathlib import Path
 from typing import Any
 
 # Pricing tiers (in USD per request)
@@ -108,6 +110,40 @@ except ImportError:
 
     CONTENT_TYPE_LATEST = "text/plain; charset=utf-8"
 
+# Configure logging
+logger = logging.getLogger("efficient.proxy")
+logger.setLevel(logging.INFO)
+
+
+def _setup_logging() -> None:
+    """Configure file and console logging for the proxy server."""
+    if logger.handlers:
+        return
+
+    log_dir = Path.home() / ".efficient" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    file_handler = logging.FileHandler(log_dir / "proxy.log")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    )
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+
+_setup_logging()
+
 # Default configuration
 DEFAULT_WALLET = os.environ.get("EFFICIENT_WALLET", "")
 DEFAULT_NETWORK = os.environ.get("EFFICIENT_NETWORK", "eip155:8453")  # Base
@@ -173,14 +209,6 @@ def create_app(
         version="0.1.0",
     )
 
-    # Cache telemetry instance for metrics
-    telemetry_instance = None
-    try:
-        from efficient.telemetry import Telemetry
-
-        telemetry_instance = Telemetry()
-    except Exception:
-        pass
 
     # ── x402 payment helpers ──
 
@@ -247,11 +275,11 @@ def create_app(
                 return bool(body.get("valid", body.get("isValid", False)))
         except (httpx.TimeoutException, json.JSONDecodeError) as e:
             # Log specific errors for debugging
-            print(f"Payment verification error: {type(e).__name__}: {e!s}")
+            logger.warning(f"Payment verification error: {type(e).__name__}: {e!s}")
             return False
         except Exception as e:
             # Catch-all for unexpected errors
-            print(f"Unexpected payment verification error: {type(e).__name__}: {e!s}")
+            logger.error(f"Unexpected payment verification error: {type(e).__name__}: {e!s}")
             return False
 
     def _determine_price(provider: str) -> float:
@@ -322,8 +350,6 @@ def create_app(
     async def chat_completions_handler(request: Request):
         """OpenAI-compatible chat completions endpoint with x402 payments."""
         # Parse JSON body
-        import json
-
         try:
             body = await request.json()
         except Exception:
@@ -433,7 +459,7 @@ def create_app(
             else:
                 tier = "cloud"
         except Exception as e:
-            print(f"Routing error: {type(e).__name__}: {e!s}")
+            logger.error(f"Routing error: {type(e).__name__}: {e!s}")
             return JSONResponse(
                 status_code=500,
                 content={"error": {"message": "Routing failed", "type": "internal_error"}},
@@ -474,22 +500,22 @@ def create_app(
 
         # Process the request through Efficient AI
         start_time = time.time()
-        ACTIVE_REQUESTS.inc()
 
         try:
             response = efficient_client.chat(
                 messages=msg_dicts, model=model or "auto", response_format=response_format
             )
 
-            # Update cache hit rate if available (using cached telemetry instance)
-            if efficient_client.cache and telemetry_instance:
+            # Update cache hit rate from actual cache stats
+            if efficient_client.cache:
                 try:
-                    stats = telemetry_instance.report(since_hours=1.0)
-                    total = stats.get("total_requests", 0)
+                    stats = efficient_client.cache.stats()
+                    total = stats.get("total_entries", 0)
+                    hits = stats.get("total_hits", 0)
                     if total > 0:
-                        CACHE_HIT_RATE.set(stats.get("cache_hits", 0) / total * 100)
+                        CACHE_HIT_RATE.set(hits / total * 100)
                 except Exception as e:
-                    print(f"Error updating cache hit rate: {type(e).__name__}: {e!s}")
+                    logger.warning(f"Error updating cache hit rate: {type(e).__name__}: {e!s}")
 
             if stream:
                 # For streaming, record metrics after streaming completes
@@ -530,7 +556,9 @@ def create_app(
                     REQUEST_COUNT.labels(tier=tier, status="success").inc()
                     BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
                     REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
+                    ACTIVE_REQUESTS.dec()
 
+                ACTIVE_REQUESTS.inc()
                 return StreamingResponse(
                     stream_generator(),
                     media_type="text/event-stream",
@@ -543,6 +571,7 @@ def create_app(
                 )
 
             # Non-streaming: record metrics immediately
+            ACTIVE_REQUESTS.inc()
             REQUEST_COUNT.labels(tier=tier, status="success").inc()
             BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
             REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
@@ -564,8 +593,10 @@ def create_app(
             )
         except Exception as e:
             REQUEST_COUNT.labels(tier=tier, status="error").inc()
+            logger.error(f"Chat completion error: {type(e).__name__}: {e!s}")
             return JSONResponse(
-                status_code=500, content={"error": {"message": str(e), "type": "internal_error"}}
+                status_code=500,
+                content={"error": {"message": "Internal server error", "type": "internal_error"}},
             )
         finally:
             ACTIVE_REQUESTS.dec()

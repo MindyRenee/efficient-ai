@@ -48,7 +48,7 @@ When a request is too complex for the engine (multi-step reasoning, creative wri
 ## Quick Start
 
 ```bash
-pip install efficient-ai
+pip install -e .
 ```
 
 ### Zero Setup — Works Immediately
@@ -126,6 +126,7 @@ efficient pull       # Pull recommended models via Ollama
 efficient report     # Show impact report (queries avoided, savings)
 efficient bench      # Benchmark local vs cloud routing
 efficient clear      # Clear cache and/or telemetry
+efficient serve      # Start x402-enabled OpenAI-compatible proxy server
 ```
 
 ## How It Works
@@ -218,11 +219,8 @@ Period: last 24h
 |---|---|---|---|---|
 | gpt-4o-mini | $0.15 | $0.60 | 82 | SMALL |
 | deepseek-v4-flash | $0.14 | $0.28 | 80 | MID |
-| claude-3-5-haiku | $0.80 | $4.00 | 80 | SMALL |
 | gpt-4o | $2.50 | $10.00 | 88 | LARGE |
-| claude-sonnet-4 | $3.00 | $15.00 | 88 | LARGE |
 | gpt-5 | $5.00 | $15.00 | 90 | FRONTIER |
-| claude-opus-4.5 | $15.00 | $75.00 | 92 | FRONTIER |
 
 ## Configuration
 
@@ -230,7 +228,7 @@ Config is stored at `~/.efficient/config.json` and auto-detected on first run:
 
 - **GPU**: NVIDIA (nvidia-smi), Apple Silicon (system_profiler), AMD (rocm-smi)
 - **Ollama**: Binary detection, server health check, installed model list
-- **Cloud keys**: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `TOGETHER_API_KEY`
+- **Cloud keys**: `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, `TOGETHER_API_KEY`
 - **Model selection**: Auto-recommends best local model based on VRAM at Q4_K_M quantization
 
 ## The Math

@@ -53,26 +53,18 @@ class CloudKeys:
     """Detected cloud API keys."""
 
     openai: str | None = None
-    anthropic: str | None = None
-    gemini: str | None = None
     openrouter: str | None = None
     groq: str | None = None
     together: str | None = None
 
     @property
     def any_available(self) -> bool:
-        return any(
-            [self.openai, self.anthropic, self.gemini, self.openrouter, self.groq, self.together]
-        )
+        return any([self.openai, self.openrouter, self.groq, self.together])
 
     def available_providers(self) -> list[str]:
         providers = []
         if self.openai:
             providers.append("openai")
-        if self.anthropic:
-            providers.append("anthropic")
-        if self.gemini:
-            providers.append("gemini")
         if self.openrouter:
             providers.append("openrouter")
         if self.groq:
@@ -175,8 +167,6 @@ class Config:
             },
             "cloud": {
                 "openai": self.cloud.openai,
-                "anthropic": self.cloud.anthropic,
-                "gemini": self.cloud.gemini,
                 "openrouter": self.cloud.openrouter,
                 "groq": self.cloud.groq,
                 "together": self.cloud.together,
@@ -214,8 +204,6 @@ class Config:
             ),
             cloud=CloudKeys(
                 openai=data.get("cloud", {}).get("openai"),
-                anthropic=data.get("cloud", {}).get("anthropic"),
-                gemini=data.get("cloud", {}).get("gemini"),
                 openrouter=data.get("cloud", {}).get("openrouter"),
                 groq=data.get("cloud", {}).get("groq"),
                 together=data.get("cloud", {}).get("together"),
@@ -421,8 +409,6 @@ def _detect_cloud_keys() -> CloudKeys:
     """Detect cloud API keys from environment variables."""
     return CloudKeys(
         openai=os.environ.get("OPENAI_API_KEY"),
-        anthropic=os.environ.get("ANTHROPIC_API_KEY"),
-        gemini=os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"),
         openrouter=os.environ.get("OPENROUTER_API_KEY"),
         groq=os.environ.get("GROQ_API_KEY"),
         together=os.environ.get("TOGETHER_API_KEY"),

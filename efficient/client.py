@@ -29,6 +29,7 @@ Usage (drop-in replacement):
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
@@ -115,6 +116,11 @@ def _compute_frontier_cost(input_tokens: int, output_tokens: int) -> float:
     return (input_tokens / 1_000_000) * _FRONTIER_REFERENCE["input_price_per_m"] + (
         output_tokens / 1_000_000
     ) * _FRONTIER_REFERENCE["output_price_per_m"]
+
+
+# ─── Logging ───────────────────────────────────────────────────────────────────
+
+logger = logging.getLogger("efficient.client")
 
 
 # ─── Main Client ───────────────────────────────────────────────────────────────
@@ -260,6 +266,11 @@ class Client:
                 use_cache=True,
             )
 
+        logger.info(
+            f"Routing decision: intent={decision.intent}, complexity={decision.complexity}, "
+            f"model={decision.model.name}, provider={decision.model.provider}, reason={decision.reason}"
+        )
+
         # 1. Check semantic cache
         if self.cache is not None and decision.use_cache:
             cache_entry = self.cache.get(
@@ -267,6 +278,7 @@ class Client:
                 intent=decision.intent,
             )
             if cache_entry is not None:
+                logger.info(f"Cache hit for intent={decision.intent}, model={cache_entry.model}")
                 response = ChatResponse(
                     content=cache_entry.response,
                     model=cache_entry.model,
@@ -284,9 +296,13 @@ class Client:
         # 2. Execute on selected backend
         backend = self._get_backend(decision.model.provider)
         if backend is None:
+            logger.warning(
+                f"No backend for provider={decision.model.provider}, attempting fallback"
+            )
             # Fallback: try any available backend
             backend = self._fallback_backend()
             if backend is None:
+                logger.error("No inference backends available")
                 raise RuntimeError(
                     "No inference backends available. "
                     "Install Ollama (ollama.com) or set an API key.",
@@ -306,9 +322,13 @@ class Client:
                 response_format=response_format,
                 **kwargs,
             )
-        except Exception:
+        except Exception as e:
+            logger.warning(
+                f"Backend {decision.model.provider} failed for {decision.model.name}: {type(e).__name__}: {e!s}"
+            )
             # If engine can't handle it, try Ollama next
             if decision.model.provider == "engine" and "ollama" in self.backends:
+                logger.info("Falling back from engine to Ollama")
                 ollama_decision = self._ollama_fallback(decision)
                 if ollama_decision:
                     ollama_backend = self.backends["ollama"]
@@ -324,6 +344,7 @@ class Client:
                         decision = ollama_decision
                     except Exception:
                         # Ollama also failed — try cloud
+                        logger.warning("Ollama fallback failed, attempting cloud fallback")
                         if self.config.cloud.any_available:
                             cloud_decision = self._cloud_fallback(decision)
                             if cloud_decision:
@@ -369,6 +390,7 @@ class Client:
                     raise
             # If local (Ollama) fails, try cloud fallback
             elif decision.model.is_local and self.config.cloud.any_available:
+                logger.info("Falling back from Ollama to cloud")
                 cloud_decision = self._cloud_fallback(decision)
                 if cloud_decision:
                     cloud_backend = self._get_backend(cloud_decision.model.provider)
@@ -420,6 +442,8 @@ class Client:
                 intent=decision.intent,
             )
 
+        logger.info(f"Response: model={response.model}, provider={response.provider}")
+
         # 4. Record telemetry
         self._record_telemetry(response, decision, result.input_tokens, result.output_tokens)
 
@@ -450,7 +474,7 @@ class Client:
             model_info = get_model(model)
             if model_info is None:
                 for m in all_models():
-                    if model in m.name:
+                    if model in m.name or m.name.startswith(model):
                         model_info = m
                         break
             if model_info is None:
@@ -472,6 +496,10 @@ class Client:
                 raise RuntimeError("No inference backends available.")
 
         try:
+            # Pass intent/complexity to engine backend for dispatch
+            if decision.model.provider == "engine":
+                kwargs["_intent"] = decision.intent
+                kwargs["_complexity"] = decision.complexity
             for chunk in backend.stream_chat(
                 model=decision.model,
                 messages=messages,
@@ -648,13 +676,71 @@ class Client:
 
         return "\n".join(lines)
 
-    def _stream_as_response(self, *args, **kwargs) -> ChatResponse:
+    def _stream_as_response(
+        self,
+        messages: list[dict],
+        model: str = "auto",
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+        tools: list[dict] | None = None,
+        response_format: dict | None = None,
+        **kwargs,
+    ) -> ChatResponse:
         """Collect a stream into a single response (for stream=True compatibility)."""
+        # Route to get metadata
+        if model == "auto":
+            decision = self.router.route(
+                messages,
+                require_tools=tools is not None,
+                require_json=response_format is not None,
+            )
+        else:
+            model_info = get_model(model)
+            if model_info is None:
+                for m in all_models():
+                    if model in m.name or m.name.startswith(model):
+                        model_info = m
+                        break
+            if model_info is None:
+                raise ValueError(f"Unknown model: {model}")
+            from efficient.router import RoutingDecision
+
+            decision = RoutingDecision(
+                intent="user-specified",
+                complexity="unknown",
+                tier=model_info.tier,
+                model=model_info,
+                reason=f"User specified '{model}'",
+            )
+
         chunks = []
-        for chunk in self.chat_stream(*args, **kwargs):
+        start = time.time()
+        for chunk in self.chat_stream(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            tools=tools,
+            response_format=response_format,
+            **kwargs,
+        ):
             chunks.append(chunk)
         content = "".join(chunks)
-        return ChatResponse(content=content, model="stream", provider="stream")
+        latency_ms = (time.time() - start) * 1000
+
+        response = ChatResponse(
+            content=content,
+            model=decision.model.name,
+            provider=decision.model.provider,
+            latency_ms=latency_ms,
+            local=decision.model.is_local,
+            intent=decision.intent,
+            routing=decision,
+        )
+
+        # Record telemetry for the collected stream
+        self._record_telemetry(response, decision, input_tokens=0, output_tokens=0)
+        return response
 
 
 # ─── OpenAI-Compatible Interface ──────────────────────────────────────────────

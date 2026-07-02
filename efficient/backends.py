@@ -3,7 +3,6 @@
 Provides a unified interface for:
 - Local inference via Ollama
 - Cloud inference via OpenAI-compatible APIs (OpenAI, Groq, OpenRouter, Together)
-- Anthropic via their native API format
 
 All backends implement the same interface, so the client can swap
 between them transparently.
@@ -93,6 +92,11 @@ class OllamaBackend(Backend):
         if self._client is None:
             self._client = httpx.Client(timeout=self.timeout)
         return self._client
+
+    def close(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
 
     def is_available(self) -> bool:
         try:
@@ -229,6 +233,11 @@ class OpenAICompatibleBackend(Backend):
                 },
             )
         return self._client
+
+    def close(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
 
     def is_available(self) -> bool:
         return bool(self.api_key)

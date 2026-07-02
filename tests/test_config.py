@@ -38,15 +38,15 @@ class TestConfig:
     def test_cloud_keys_detection(self, monkeypatch):
         """Cloud keys should be detected from environment."""
         monkeypatch.setenv("OPENAI_API_KEY", "test-key-123")
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-456")
+        monkeypatch.setenv("GROQ_API_KEY", "test-key-456")
         keys = CloudKeys(
             openai="test-key-123",
-            anthropic="test-key-456",
+            groq="test-key-456",
         )
         assert keys.openai == "test-key-123"
-        assert keys.anthropic == "test-key-456"
+        assert keys.groq == "test-key-456"
         assert "openai" in keys.available_providers()
-        assert "anthropic" in keys.available_providers()
+        assert "groq" in keys.available_providers()
 
     def test_cloud_keys_none(self):
         keys = CloudKeys()

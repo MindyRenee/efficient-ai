@@ -27,7 +27,7 @@ class ModelInfo:
 
     name: str  # Canonical name
     tier: CapabilityTier
-    provider: str  # ollama, openai, anthropic, etc.
+    provider: str  # ollama, openai, groq, openrouter, together, etc.
     param_count_b: float = 0  # Billions of parameters (0 for proprietary)
     context_window: int = 4096
     # Pricing per million tokens (USD), 0 for local
@@ -310,52 +310,6 @@ _CLOUD_MODELS: list[ModelInfo] = [
         supports_json=True,
         max_output_tokens=4096,
         tags=["general", "fast", "legacy"],
-    ),
-    # Anthropic
-    ModelInfo(
-        name="claude-3-5-haiku",
-        tier=CapabilityTier.SMALL,
-        provider="anthropic",
-        context_window=200000,
-        input_price_per_m=0.80,
-        output_price_per_m=4.00,
-        mmlu_score=80.0,
-        human_eval=83.0,
-        supports_tools=True,
-        supports_vision=True,
-        supports_json=True,
-        max_output_tokens=8192,
-        tags=["general", "fast", "long-context"],
-    ),
-    ModelInfo(
-        name="claude-sonnet-4",
-        tier=CapabilityTier.LARGE,
-        provider="anthropic",
-        context_window=200000,
-        input_price_per_m=3.00,
-        output_price_per_m=15.00,
-        mmlu_score=88.0,
-        human_eval=90.0,
-        supports_tools=True,
-        supports_vision=True,
-        supports_json=True,
-        max_output_tokens=8192,
-        tags=["reasoning", "agentic", "coding", "long-context"],
-    ),
-    ModelInfo(
-        name="claude-opus-4.5",
-        tier=CapabilityTier.FRONTIER,
-        provider="anthropic",
-        context_window=200000,
-        input_price_per_m=15.00,
-        output_price_per_m=75.00,
-        mmlu_score=92.0,
-        human_eval=95.0,
-        supports_tools=True,
-        supports_vision=True,
-        supports_json=True,
-        max_output_tokens=32768,
-        tags=["frontier", "reasoning", "agentic", "coding"],
     ),
     # Groq (ultra-fast inference)
     ModelInfo(

@@ -38,6 +38,7 @@ ENV/
 htmlcov/
 coverage.xml
 .tox/
+.mypy_cache/
 
 # Local environment
 .env

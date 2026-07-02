@@ -300,7 +300,7 @@ def select_model(
     # Filter local models by availability and requirements
     local_candidates = []
     for m in local_models():
-        if m.name not in available_local_models and preferred_local not in available_local_models:
+        if m.name not in available_local_models:
             continue
         if m.tier < tier:
             continue
