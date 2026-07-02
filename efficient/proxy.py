@@ -561,7 +561,6 @@ def create_app(
                     REQUEST_COUNT.labels(tier=tier, status="success").inc()
                     BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
                     REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
-                    ACTIVE_REQUESTS.dec()
 
                 ACTIVE_REQUESTS.inc()
                 return StreamingResponse(
@@ -594,7 +593,7 @@ def create_app(
             return JSONResponse(
                 content=result,
                 headers={
-                    "X-Tier": response.provider,
+                    "X-Tier": tier,
                     "X-Price": f"${price:.4f}",
                     "X-Model": response.model,
                     "X-Latency-ms": f"{response.latency_ms:.1f}",
