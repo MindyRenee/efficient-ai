@@ -16,6 +16,9 @@ EXPOSE 8000
 # Set environment variables for x402
 ENV EFFICIENT_NETWORK=eip155:8453
 ENV EFFICIENT_FACILITATOR_URL=https://x402.org/facilitator
+# Wallet address - set at runtime or via build arg
+ARG EFFICIENT_WALLET
+ENV EFFICIENT_WALLET=${EFFICIENT_WALLET}
 
 # Run the server
 CMD ["efficient", "serve", "--host", "0.0.0.0", "--port", "8000"]

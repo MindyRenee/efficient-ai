@@ -6,8 +6,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Generated wallet for x402 payments on Base network
-      - EFFICIENT_WALLET=0x4c368865fb3a0553F782beb3e772a22bca988b22
+      # Wallet address for x402 payments on Base network
+      - EFFICIENT_WALLET=0x13210FeC594489F5F4f3E54e6bA65b62d2C6CEA9
       - EFFICIENT_NETWORK=${EFFICIENT_NETWORK:-eip155:8453}
       - EFFICIENT_FACILITATOR_URL=${EFFICIENT_FACILITATOR_URL:-https://x402.org/facilitator}
       # Optional: Cloud API keys for fallback
