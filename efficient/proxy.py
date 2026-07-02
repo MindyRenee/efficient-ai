@@ -505,6 +505,7 @@ def create_app(
 
         # Process the request through Efficient AI
         start_time = time.time()
+        ACTIVE_REQUESTS.inc()
 
         try:
             response = efficient_client.chat(
@@ -562,12 +563,11 @@ def create_app(
                     BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
                     REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
 
-                ACTIVE_REQUESTS.inc()
                 return StreamingResponse(
                     stream_generator(),
                     media_type="text/event-stream",
                     headers={
-                        "X-Tier": response.provider,
+                        "X-Tier": tier,
                         "X-Price": f"${price:.4f}",
                         "X-Model": response.model,
                     },
@@ -575,7 +575,6 @@ def create_app(
                 )
 
             # Non-streaming: record metrics immediately
-            ACTIVE_REQUESTS.inc()
             REQUEST_COUNT.labels(tier=tier, status="success").inc()
             BACKEND_DISTRIBUTION.labels(backend=response.provider).inc()
             REQUEST_LATENCY.labels(tier=tier).observe(time.time() - start_time)
