@@ -155,7 +155,11 @@ class TestProxyChat:
         text = resp.text
         assert "data: " in text
         assert "[DONE]" in text
-        data_lines = [line for line in text.splitlines() if line.startswith("data: ") and line != "data: [DONE]"]
+        data_lines = [
+            line
+            for line in text.splitlines()
+            if line.startswith("data: ") and line != "data: [DONE]"
+        ]
         assert len(data_lines) > 1  # Should emit multiple chunks, not just one
 
     def test_empty_messages(self, client):
@@ -249,14 +253,17 @@ class TestProxyPaymentFlow:
 
         class FakeResponse:
             status_code = 200
+
             def json(self):
                 return {"valid": True}
 
         class FakeClient:
             async def __aenter__(self):
                 return self
+
             async def __aexit__(self, *args):
                 pass
+
             async def post(self, *args, **kwargs):
                 return FakeResponse()
 
@@ -281,14 +288,17 @@ class TestProxyPaymentFlow:
 
         class FakeResponse:
             status_code = 200
+
             def json(self):
                 return {"valid": False}
 
         class FakeClient:
             async def __aenter__(self):
                 return self
+
             async def __aexit__(self, *args):
                 pass
+
             async def post(self, *args, **kwargs):
                 return FakeResponse()
 
