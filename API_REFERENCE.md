@@ -49,11 +49,11 @@ curl -X POST https://api.yourdomain.com/v1/chat/completions \
 
 ## Base URL
 
-| Environment | Base URL |
+|Environment|Base URL|
 |-------------|----------|
-| Production | `https://api.yourdomain.com` |
-| Staging | `https://staging-api.yourdomain.com` |
-| Development | `http://localhost:8000` |
+|Production|`https://api.yourdomain.com`|
+|Staging|`https://staging-api.yourdomain.com`|
+|Development|`http://localhost:8000`|
 
 ## Endpoints
 
@@ -83,21 +83,21 @@ Create a chat completion.
 
 **Parameters**:
 
-| Parameter | Type | Required | Default | Description |
+|Parameter|Type|Required|Default|Description|
 |-----------|------|----------|---------|-------------|
-| `model` | string | No | `auto` | Model to use. `auto` for automatic routing, or specific model name |
-| `messages` | array | Yes | - | Array of message objects |
-| `temperature` | number | No | `0.7` | Sampling temperature (0.0 to 2.0) |
-| `max_tokens` | integer | No | `null` | Maximum tokens to generate |
-| `stream` | boolean | No | `false` | Enable streaming response |
-| `response_format` | object | No | `null` | Format for structured output (e.g., `{"type": "json_object"}`) |
+|`model`|string|No|`auto`|Model to use. `auto` for automatic routing, or specific model name|
+|`messages`|array|Yes|-|Array of message objects|
+|`temperature`|number|No|`0.7`|Sampling temperature (0.0 to 2.0)|
+|`max_tokens`|integer|No|`null`|Maximum tokens to generate|
+|`stream`|boolean|No|`false`|Enable streaming response|
+|`response_format`|object|No|`null`|Format for structured output (e.g., `{"type": "json_object"}`)|
 
 **Message Object**:
 
-| Parameter | Type | Required | Description |
+|Parameter|Type|Required|Description|
 |-----------|------|----------|-------------|
-| `role` | string | Yes | `system`, `user`, or `assistant` |
-| `content` | string | Yes | Message content |
+|`role`|string|Yes|`system`, `user`, or `assistant`|
+|`content`|string|Yes|Message content|
 
 **Response** (non-streaming):
 
@@ -192,7 +192,7 @@ Check service health.
 
 Get service information.
 
-**Endpoint**: `GET `/`
+**Endpoint**: `GET /`
 
 **Response**:
 
@@ -251,7 +251,7 @@ interface Usage {
 
 When `stream: true`, responses are sent as Server-Sent Events (SSE):
 
-```
+```text
 data: {"id":"chatcmpl-abc","object":"chat.completion.chunk","created":1699012345,"model":"local-engine","choices":[{"index":0,"delta":{"role":"assistant","content":"The"},"finish_reason":null}]}
 
 data: {"id":"chatcmpl-abc","object":"chat.completion.chunk","created":1699012345,"model":"local-engine","choices":[{"index":0,"delta":{"content":" capital"},"finish_reason":null}]}
@@ -286,25 +286,25 @@ data: [DONE]
 
 ### HTTP Status Codes
 
-| Code | Description |
+|Code|Description|
 |------|-------------|
-| 200 | Success |
-| 400 | Bad Request |
-| 401 | Unauthorized |
-| 402 | Payment Required (x402) |
-| 429 | Rate Limit Exceeded |
-| 500 | Internal Server Error |
-| 503 | Service Unavailable |
+|200|Success|
+|400|Bad Request|
+|401|Unauthorized|
+|402|Payment Required (x402)|
+|429|Rate Limit Exceeded|
+|500|Internal Server Error|
+|503|Service Unavailable|
 
 ### Error Types
 
-| Type | Description |
+|Type|Description|
 |------|-------------|
-| `invalid_request_error` | Invalid request parameters |
-| `authentication_error` | Authentication failed |
-| `payment_required` | Payment required (x402) |
-| `rate_limit_error` | Rate limit exceeded |
-| `internal_error` | Internal server error |
+|`invalid_request_error`|Invalid request parameters|
+|`authentication_error`|Authentication failed|
+|`payment_required`|Payment required (x402)|
+|`rate_limit_error`|Rate limit exceeded|
+|`internal_error`|Internal server error|
 
 ### Example Error Response
 
