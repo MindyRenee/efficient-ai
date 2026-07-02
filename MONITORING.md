@@ -27,6 +27,7 @@ Efficient AI provides observability across three pillars:
 ### Core Application Metrics
 
 **Request metrics**:
+
 ```python
 from prometheus_client import Counter, Histogram, Gauge
 
@@ -53,6 +54,7 @@ active_connections = Gauge(
 ```
 
 **Backend distribution metrics**:
+
 ```python
 backend_requests = Counter(
     'efficient_backend_requests_total',
@@ -68,6 +70,7 @@ backend_latency = Histogram(
 ```
 
 **Payment metrics**:
+
 ```python
 payment_requests = Counter(
     'efficient_payment_requests_total',
@@ -83,6 +86,7 @@ payment_amount = Histogram(
 ```
 
 **Cache metrics**:
+
 ```python
 cache_hits = Counter('efficient_cache_hits_total', 'Cache hits')
 cache_misses = Counter('efficient_cache_misses_total', 'Cache misses')
@@ -92,6 +96,7 @@ cache_size = Gauge('efficient_cache_size_bytes', 'Cache size in bytes')
 ### System Metrics
 
 **Resource utilization**:
+
 ```python
 import psutil
 
@@ -106,6 +111,7 @@ def update_system_metrics():
 ```
 
 **GPU metrics (if using Ollama)**:
+
 ```python
 import pynvml
 
@@ -127,6 +133,7 @@ def update_gpu_metrics():
 ### Prometheus Configuration
 
 **prometheus.yml**:
+
 ```yaml
 global:
   scrape_interval: 15s
@@ -149,6 +156,7 @@ scrape_configs:
 ```
 
 **Metrics endpoint implementation**:
+
 ```python
 from prometheus_client import make_asgi_app
 from fastapi import FastAPI
@@ -163,6 +171,7 @@ app.mount("/metrics", metrics_app)
 ### Structured Logging
 
 **Configuration**:
+
 ```python
 import structlog
 import logging.config
@@ -207,6 +216,7 @@ logger = structlog.get_logger()
 ```
 
 **Usage**:
+
 ```python
 logger.info("request_processed",
             request_id="abc123",
@@ -287,6 +297,7 @@ scrape_configs:
 ### Log Retention
 
 **Policy**:
+
 - DEBUG logs: 7 days
 - INFO logs: 30 days
 - WARNING logs: 90 days
@@ -298,6 +309,7 @@ scrape_configs:
 ### OpenTelemetry Integration
 
 **Setup**:
+
 ```python
 from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -321,6 +333,7 @@ FastAPIInstrumentor.instrument_app(app)
 ```
 
 **Custom spans**:
+
 ```python
 from opentelemetry import trace
 
@@ -440,6 +453,7 @@ groups:
 ### Alert Routing
 
 **Alertmanager configuration**:
+
 ```yaml
 route:
   group_by: ['alertname', 'severity']
@@ -501,6 +515,7 @@ receivers:
 8. **Active Connections**: Current connection count
 
 **Dashboard JSON**:
+
 ```json
 {
   "dashboard": {
@@ -534,6 +549,7 @@ receivers:
 ### Business Dashboard
 
 **Revenue tracking**:
+
 ```promql
 # Total revenue
 sum(increase(efficient_payment_amount_usd[1d]))
@@ -546,6 +562,7 @@ sum(increase(efficient_payment_amount_usd[7d]))
 ```
 
 **Cost savings**:
+
 ```promql
 # Cloud cost avoided
 sum(efficient_backend_requests_total{backend="engine"} or efficient_backend_requests_total{backend="cache"}) * 0.01
@@ -559,6 +576,7 @@ sum(efficient_backend_requests_total{backend="cloud"}) * 0.01
 ### Apdex Score
 
 **Application Performance Index**:
+
 ```python
 def calculate_apdex(latencies_ms: list, threshold_ms: float = 500) -> float:
     """
@@ -577,6 +595,7 @@ def calculate_apdex(latencies_ms: list, threshold_ms: float = 500) -> float:
 ### Synthetic Monitoring
 
 **Uptime checks**:
+
 ```python
 import httpx
 import time
@@ -603,6 +622,7 @@ async def health_check(url: str) -> dict:
 ### Real User Monitoring (RUM)
 
 **Client-side metrics**:
+
 ```javascript
 // Send client-side metrics to server
 const metrics = {
@@ -636,6 +656,7 @@ fetch('/api/metrics', {
 ### Revenue Metrics
 
 **Daily revenue**:
+
 ```python
 def calculate_daily_revenue(date: str) -> float:
     # Query telemetry database
@@ -649,6 +670,7 @@ def calculate_daily_revenue(date: str) -> float:
 ```
 
 **Revenue by customer**:
+
 ```python
 def revenue_by_customer(days: int = 30) -> dict:
     query = """
@@ -664,6 +686,7 @@ def revenue_by_customer(days: int = 30) -> dict:
 ### Usage Analytics
 
 **User engagement**:
+
 ```python
 def user_engagement_metrics(user_id: str) -> dict:
     query = """
@@ -683,17 +706,20 @@ def user_engagement_metrics(user_id: str) -> dict:
 ### Recommended Stack
 
 **Open-source**:
+
 - **Metrics**: Prometheus + Grafana
 - **Logs**: Loki + Grafana
 - **Tracing**: Jaeger + OpenTelemetry
 - **Alerting**: Alertmanager
 
 **Cloud-native**:
+
 - **AWS**: CloudWatch + X-Ray + SNS
 - **GCP**: Cloud Monitoring + Cloud Trace + Cloud Logging
 - **Azure**: Monitor + Application Insights
 
 **SaaS**:
+
 - **Datadog**: All-in-one observability
 - **New Relic**: APM + Infrastructure
 - **Splunk**: Log analysis + SIEM
@@ -701,6 +727,7 @@ def user_engagement_metrics(user_id: str) -> dict:
 ### Integration Examples
 
 **Datadog**:
+
 ```python
 from ddtrace import tracer
 from ddtrace.contrib.fastapi import patch as patch_fastapi
@@ -714,6 +741,7 @@ async def process_request(request):
 ```
 
 **CloudWatch**:
+
 ```python
 import boto3
 
@@ -758,17 +786,20 @@ def put_metric(metric_name: str, value: float, dimensions: list):
 ### Common Issues
 
 **Metrics not appearing**:
+
 - Check Prometheus scrape configuration
 - Verify metrics endpoint is accessible
 - Check firewall rules
 
 **High latency**:
+
 - Check backend distribution (too many cloud requests?)
 - Verify cache hit rate
 - Check database query performance
 - Monitor network latency
 
 **Alert fatigue**:
+
 - Adjust alert thresholds
 - Add alert grouping
 - Implement alert suppression during maintenance

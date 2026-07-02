@@ -7,10 +7,12 @@
 **Subheadline**: 90% lower cost. Sub-1ms latency. 88% of queries never touch a data center.
 
 **CTA Buttons**:
+
 - Primary: "Get Started Free"
 - Secondary: "View Demo"
 
 **Trust Indicators**:
+
 - "Used by 500+ developers"
 - "10M+ queries processed"
 - "97% average cost savings"
@@ -20,6 +22,7 @@
 **Headline**: The Data Center Crisis is a Developer Experience Problem
 
 **Key Statistics**:
+
 - 4,000+ data centers being built worldwide
 - 80% of "AI" requests are just text processing we solved in the 2000s
 - 3 billion idle GPUs on consumer hardware
@@ -71,6 +74,7 @@
 **Headline**: Most "AI" Requests Don't Need a Neural Network
 
 **Examples**:
+
 - Summarization → TF-IDF sentence scoring (solved in 1950s)
 - Classification → Naive Bayes + keyword matching (solved in 1960s)
 - Entity extraction → Regex patterns (solved in 1970s)
@@ -107,13 +111,13 @@ print(response.latency_ms) # 0.5ms
 
 **Before/After Comparison**:
 
-| Metric | Before (Cloud Only) | After (Efficient AI) |
-|--------|-------------------|---------------------|
-| Monthly Cost | $100 | $5 |
-| Avg Latency | 500ms | 0.8ms |
-| Data Center Queries | 100% | 5% |
-| Energy Use | 100% | 10% |
-| Privacy | Data leaves device | Data stays local |
+|Metric|Before (Cloud Only)|After (Efficient AI)|
+|------|-------------------|--------------------|
+|Monthly Cost|$100|$5|
+|Avg Latency|500ms|0.8ms|
+|Data Center Queries|100%|5%|
+|Energy Use|100%|10%|
+|Privacy|Data leaves device|Data stays local|
 
 **Copy**: A typical app spending $100/month on cloud AI APIs drops to $5/month with Efficient AI. 95% of inference never touches a data center.
 
@@ -123,25 +127,29 @@ print(response.latency_ms) # 0.5ms
 
 **Pricing Tiers**:
 
-**Free (Embedded Engine)**
+### Free (Embedded Engine)
+
 - $0 forever
 - 80% of queries
 - Sub-1ms latency
 - No limits
 
-**Local (Ollama)**
+### Local (Ollama)
+
 - $0/token
 - Your hardware
 - Privacy-preserving
 - No API keys
 
-**Cloud (Fallback)**
+### Cloud (Fallback)
+
 - Pay only for hardest 5% of queries
 - Same pricing as OpenAI
 - Automatic escalation
 - No lock-in
 
-**Enterprise (x402 Payments)**
+### Enterprise (x402 Payments)
+
 - Per-request micro-payments
 - USDC on Base network
 - No subscription
@@ -168,6 +176,7 @@ print(response.latency_ms) # 0.5ms
 **Headline**: Drop-In OpenAI Replacement
 
 **Supported SDKs**:
+
 - Python (native)
 - OpenAI Python SDK (compatible)
 - OpenAI Node.js SDK (compatible)
@@ -180,6 +189,7 @@ print(response.latency_ms) # 0.5ms
 **Headline**: Enterprise-Ready
 
 **Features**:
+
 - x402 payment protocol for monetization
 - Kubernetes deployment manifests
 - Horizontal auto-scaling
@@ -211,6 +221,7 @@ print(response.latency_ms) # 0.5ms
 ## Footer
 
 **Links**:
+
 - Documentation
 - API Reference
 - Deployment Guide
