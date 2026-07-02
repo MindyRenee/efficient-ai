@@ -203,7 +203,7 @@ print(response.latency_ms) # 0.5ms
 **A**: Clients pay micro-amounts per request via USDC on Base network. No subscription required.
 
 **Q**: Can I use my own models?
-**A**: Yes. Ollama supports 100+ models. Cloud backends support OpenAI, Anthropic, Google, and more.
+**A**: Yes. Ollama supports 100+ models. Cloud backends support OpenAI.
 
 **Q**: Is my data private?
 **A**: Yes. 88% of queries never leave your device. Only the hardest 5% go to cloud APIs.

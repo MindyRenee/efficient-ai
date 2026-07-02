@@ -469,8 +469,12 @@ def create_app(
 
         # Check for payment
         payment_header = request.headers.get("PAYMENT-SIGNATURE", "")
+        logger.info(
+            f"Request: tier={tier}, price=${price:.4f}, model={model}, wallet={wallet or 'free'}"
+        )
 
         if not payment_header and wallet:
+            logger.info(f"Payment required: ${price:.4f} for tier={tier}")
             requirements = _build_payment_requirements(price)
             return JSONResponse(
                 status_code=402,
@@ -488,6 +492,7 @@ def create_app(
             verified = await _verify_payment(payment_header, requirements)
             PAYMENT_VERIFICATION_COUNT.labels(status="success" if verified else "failed").inc()
             if not verified:
+                logger.warning("Payment verification failed")
                 return JSONResponse(
                     status_code=402,
                     content={"error": "Payment verification failed"},
@@ -581,6 +586,10 @@ def create_app(
                 model=response.model,
                 input_tokens=response.input_tokens,
                 output_tokens=response.output_tokens,
+            )
+            logger.info(
+                f"Response: model={response.model}, provider={response.provider}, "
+                f"latency_ms={response.latency_ms:.1f}, price=${price:.4f}"
             )
             return JSONResponse(
                 content=result,
