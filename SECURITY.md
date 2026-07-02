@@ -29,18 +29,18 @@ Efficient AI implements defense-in-depth security across multiple layers:
 
 ### Identified Threats
 
-| Threat | Likelihood | Impact | Mitigation |
+|Threat|Likelihood|Impact|Mitigation|
 |--------|-----------|--------|------------|
-| DDoS attacks | High | Medium | Rate limiting, CDN, auto-scaling |
-| API key leakage | Medium | High | Secrets management, rotation |
-| Payment fraud | Medium | High | x402 verification, facilitator |
-| Data exfiltration | Low | High | Encryption, access controls |
-| Supply chain attacks | Low | High | Dependency scanning, SBOM |
-| Insider threats | Low | High | Audit logging, least privilege |
+|DDoS attacks|High|Medium|Rate limiting, CDN, auto-scaling|
+|API key leakage|Medium|High|Secrets management, rotation|
+|Payment fraud|Medium|High|x402 verification, facilitator|
+|Data exfiltration|Low|High|Encryption, access controls|
+|Supply chain attacks|Low|High|Dependency scanning, SBOM|
+|Insider threats|Low|High|Audit logging, least privilege|
 
 ### Attack Surface
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                   External Attack Surface                │
 ├─────────────────────────────────────────────────────────┤
@@ -82,6 +82,7 @@ async def chat_completions(
 ```
 
 **Best Practices**:
+
 - Use cryptographically secure random keys (32+ bytes)
 - Rotate keys every 90 days
 - Implement key expiration
@@ -281,7 +282,7 @@ ufw enable
 
 **VPC architecture**:
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │                    VPC                          │
 │  ┌──────────────┐  ┌──────────────┐            │
@@ -554,18 +555,21 @@ signatures_required = 2
 ### SOC 2 Type II Controls
 
 **Access Control**:
+
 - Unique user accounts for all personnel
 - MFA required for privileged access
 - Access reviews quarterly
 - Automated provisioning/deprovisioning
 
 **Change Management**:
+
 - All changes via pull requests
 - Code review required
 - Approval process for production changes
 - Rollback procedures documented
 
 **Incident Response**:
+
 - 24/7 monitoring
 - Incident response team on-call
 - Defined escalation procedures
@@ -574,16 +578,19 @@ signatures_required = 2
 ### GDPR Compliance
 
 **Data minimization**:
+
 - Only collect necessary data
 - Automatic data retention policies
 - Right to deletion implementation
 
 **Data portability**:
+
 - Export user data on request
 - Standard formats (JSON, CSV)
 - Timely response (30 days)
 
 **Consent management**:
+
 - Explicit consent for data processing
 - Easy withdrawal of consent
 - Clear privacy policy
@@ -591,6 +598,7 @@ signatures_required = 2
 ### PCI DSS (if applicable)
 
 **Payment card data**:
+
 - Never store full card numbers
 - Use tokenization
 - PCI-compliant payment processor
@@ -600,12 +608,12 @@ signatures_required = 2
 
 ### Incident Classification
 
-| Severity | Response Time | Example |
+|Severity|Response Time|Example|
 |----------|---------------|---------|
-| P0 - Critical | 15 minutes | System down, data breach |
-| P1 - High | 1 hour | Payment failures, security vulnerability |
-| P2 - Medium | 4 hours | Performance degradation, minor bugs |
-| P3 - Low | 24 hours | Documentation issues, feature requests |
+|P0 - Critical|15 minutes|System down, data breach|
+|P1 - High|1 hour|Payment failures, security vulnerability|
+|P2 - Medium|4 hours|Performance degradation, minor bugs|
+|P3 - Low|24 hours|Documentation issues, feature requests|
 
 ### Incident Response Plan
 
@@ -669,16 +677,19 @@ signatures_required = 2
 ### Regular Audits
 
 **Monthly**:
+
 - Dependency vulnerability scan
 - Access review
 - Log analysis
 
 **Quarterly**:
+
 - Penetration testing
 - Code security review
 - Configuration audit
 
 **Annually**:
+
 - Third-party security assessment
 - Compliance audit (SOC 2, PCI DSS)
 - Disaster recovery test
@@ -686,12 +697,14 @@ signatures_required = 2
 ### Penetration Testing
 
 **Scope**:
+
 - Public API endpoints
 - Authentication mechanisms
 - Payment verification
 - Infrastructure
 
 **Tools**:
+
 - OWASP ZAP
 - Burp Suite
 - Metasploit
