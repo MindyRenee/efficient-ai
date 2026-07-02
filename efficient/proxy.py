@@ -143,7 +143,6 @@ def create_app(
     try:
         from fastapi import FastAPI, Request
         from fastapi.responses import JSONResponse, Response
-        from pydantic import BaseModel
         from starlette.background import BackgroundTask
     except ImportError as err:
         raise ImportError(
@@ -182,22 +181,6 @@ def create_app(
         telemetry_instance = Telemetry()
     except Exception:
         pass
-
-    # ── Pydantic models for OpenAI-compatible API ──
-
-    class ChatMessage(BaseModel):
-        role: str
-        content: str
-
-    class ChatCompletionRequest(BaseModel):
-        model: str = "auto"
-        messages: list[ChatMessage]
-        temperature: float | None = 1.0
-        max_tokens: int | None = None
-        stream: bool | None = False
-        response_format: dict | None = None
-
-        model_config = {"extra": "allow"}
 
     # ── x402 payment helpers ──
 
@@ -258,8 +241,11 @@ def create_app(
                     },
                     timeout=10.0,
                 )
-                return resp.status_code == 200
-        except (httpx.TimeoutException, httpx.HTTPStatusError, json.JSONDecodeError) as e:
+                if resp.status_code != 200:
+                    return False
+                body = resp.json()
+                return bool(body.get("valid", body.get("isValid", False)))
+        except (httpx.TimeoutException, json.JSONDecodeError) as e:
             # Log specific errors for debugging
             print(f"Payment verification error: {type(e).__name__}: {e!s}")
             return False
@@ -363,6 +349,15 @@ def create_app(
         model = body.get("model", "auto")
         stream = body.get("stream", False)
         response_format = body.get("response_format")
+
+        # Validate messages is a list
+        if not isinstance(messages, list):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": {"message": "messages must be a list", "type": "invalid_request"}
+                },
+            )
 
         # Validate messages list is not empty
         if not messages:
@@ -482,13 +477,8 @@ def create_app(
         ACTIVE_REQUESTS.inc()
 
         try:
-            eff_model = (
-                "auto"
-                if model in ("auto", "gpt-4o", "gpt-4o-mini", "gpt-4", "gpt-3.5-turbo", "")
-                else model
-            )
             response = efficient_client.chat(
-                messages=msg_dicts, model=eff_model, response_format=response_format
+                messages=msg_dicts, model=model or "auto", response_format=response_format
             )
 
             # Update cache hit rate if available (using cached telemetry instance)
@@ -504,24 +494,29 @@ def create_app(
             if stream:
                 # For streaming, record metrics after streaming completes
                 async def stream_generator():
-                    chunk = {
-                        "id": f"chatcmpl-{uuid.uuid4().hex[:24]}",
-                        "object": "chat.completion.chunk",
-                        "created": int(time.time()),
-                        "model": response.model,
-                        "choices": [
-                            {
-                                "index": 0,
-                                "delta": {"role": "assistant", "content": response.content},
-                                "finish_reason": None,
-                            }
-                        ],
-                    }
-                    yield f"data: {json.dumps(chunk)}\n\n"
+                    chunk_id = f"chatcmpl-{uuid.uuid4().hex[:24]}"
+                    created = int(time.time())
+                    words = response.content.split(" ")
+                    for i, word in enumerate(words):
+                        content = word + (" " if i < len(words) - 1 else "")
+                        chunk = {
+                            "id": chunk_id,
+                            "object": "chat.completion.chunk",
+                            "created": created,
+                            "model": response.model,
+                            "choices": [
+                                {
+                                    "index": 0,
+                                    "delta": {"role": "assistant", "content": content},
+                                    "finish_reason": None,
+                                }
+                            ],
+                        }
+                        yield f"data: {json.dumps(chunk)}\n\n"
                     final_chunk = {
-                        "id": chunk["id"],
+                        "id": chunk_id,
                         "object": "chat.completion.chunk",
-                        "created": chunk["created"],
+                        "created": created,
                         "model": response.model,
                         "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
                     }

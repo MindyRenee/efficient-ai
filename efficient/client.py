@@ -702,7 +702,7 @@ class CompletionsInterface:
             messages = []
 
         if stream:
-            return self.chat_stream(  # type: ignore[attr-defined]
+            return self.client.chat_stream(
                 messages=messages,
                 model=model,
                 temperature=temperature,

@@ -155,6 +155,8 @@ class TestProxyChat:
         text = resp.text
         assert "data: " in text
         assert "[DONE]" in text
+        data_lines = [line for line in text.splitlines() if line.startswith("data: ") and line != "data: [DONE]"]
+        assert len(data_lines) > 1  # Should emit multiple chunks, not just one
 
     def test_empty_messages(self, client):
         """Empty messages should return 400 error."""
@@ -168,7 +170,7 @@ class TestProxyChat:
         assert resp.status_code == 400
 
     def test_different_model_names(self, client):
-        """Various model names should all work (mapped to auto)."""
+        """Auto model and explicit model names are accepted by the API."""
         for model in ["gpt-4o", "gpt-4o-mini", "gpt-4", "gpt-3.5-turbo"]:
             resp = client.post(
                 "/v1/chat/completions",
@@ -237,6 +239,70 @@ class TestProxyPaymentFlow:
             },
         )
         assert resp.status_code == 200
+
+    def test_payment_verified_when_valid(self, client, monkeypatch):
+        """With valid payment signature, request should succeed."""
+        from efficient.proxy import create_app
+
+        app = create_app(wallet_address="0x1234567890123456789012345678901234567890")
+        test_client = TestClient(app)
+
+        class FakeResponse:
+            status_code = 200
+            def json(self):
+                return {"valid": True}
+
+        class FakeClient:
+            async def __aenter__(self):
+                return self
+            async def __aexit__(self, *args):
+                pass
+            async def post(self, *args, **kwargs):
+                return FakeResponse()
+
+        monkeypatch.setattr("httpx.AsyncClient", FakeClient)
+
+        resp = test_client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "auto",
+                "messages": [{"role": "user", "content": "What is 2 + 2?"}],
+            },
+            headers={"PAYMENT-SIGNATURE": "eyJ0ZXN0IjogdHJ1ZX0="},
+        )
+        assert resp.status_code == 200
+
+    def test_payment_rejected_when_invalid(self, client, monkeypatch):
+        """With invalid payment signature, should return 402."""
+        from efficient.proxy import create_app
+
+        app = create_app(wallet_address="0x1234567890123456789012345678901234567890")
+        test_client = TestClient(app)
+
+        class FakeResponse:
+            status_code = 200
+            def json(self):
+                return {"valid": False}
+
+        class FakeClient:
+            async def __aenter__(self):
+                return self
+            async def __aexit__(self, *args):
+                pass
+            async def post(self, *args, **kwargs):
+                return FakeResponse()
+
+        monkeypatch.setattr("httpx.AsyncClient", FakeClient)
+
+        resp = test_client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "auto",
+                "messages": [{"role": "user", "content": "What is 2 + 2?"}],
+            },
+            headers={"PAYMENT-SIGNATURE": "eyJ0ZXN0IjogdHJ1ZX0="},
+        )
+        assert resp.status_code == 402
 
 
 class TestProxyErrorHandling:
@@ -331,3 +397,15 @@ class TestProxyErrorHandling:
         )
         assert resp.status_code == 400
         assert "json object" in resp.json()["error"]["message"].lower()
+
+    def test_messages_not_list(self, client):
+        """Messages must be a list."""
+        resp = client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "auto",
+                "messages": "not a list",
+            },
+        )
+        assert resp.status_code == 400
+        assert "list" in resp.json()["error"]["message"].lower()
