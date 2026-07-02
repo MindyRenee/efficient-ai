@@ -19,7 +19,7 @@ Production deployment strategies for Efficient AI with x402 monetization.
 
 **Best for**: Startups, MVPs, low-to-medium traffic
 
-```
+```text
 ┌─────────────────┐
 │   Load Balancer │ (nginx/Caddy/ALB)
 └────────┬────────┘
@@ -38,6 +38,7 @@ Production deployment strategies for Efficient AI with x402 monetization.
 ```
 
 **Configuration**:
+
 - 2-3 app instances for redundancy
 - Shared cache (Redis) for consistency
 - Load balancer with health checks
@@ -47,7 +48,7 @@ Production deployment strategies for Efficient AI with x402 monetization.
 
 **Best for**: Enterprise, global customers, high availability
 
-```
+```text
 Region US-East                    Region EU-West
 ┌─────────────────┐              ┌─────────────────┐
 │   Load Balancer │              │   Load Balancer │
@@ -69,6 +70,7 @@ Region US-East                    Region EU-West
 ```
 
 **Configuration**:
+
 - GeoDNS routing (Cloudflare, Route53)
 - Regional app instances
 - Regional Redis clusters
@@ -427,12 +429,14 @@ grafana-cli import monitoring/grafana-dashboard.json
 ### Backup Strategy
 
 **Daily backups**:
+
 - Database: Daily full backups + WAL archiving
 - Cache: Redis persistence (AOF + RDB)
 - Configuration: Version control (Git)
 - Logs: Centralized log aggregation (ELK, Loki)
 
 **Backup retention**:
+
 - Daily: 7 days
 - Weekly: 4 weeks
 - Monthly: 12 months
@@ -440,12 +444,14 @@ grafana-cli import monitoring/grafana-dashboard.json
 ### Recovery Procedures
 
 1. **Database Recovery**:
+
    ```bash
    # Restore from backup
    pg_restore -d efficient_ai backup.dump
    ```
 
 2. **Cache Recovery**:
+
    ```bash
    # Redis AOF recovery
    redis-server --appendonly yes --appendfilename appendonly.aof
@@ -459,6 +465,7 @@ grafana-cli import monitoring/grafana-dashboard.json
 ### Failover Testing
 
 **Monthly failover drills**:
+
 - Simulate primary database failure
 - Test load balancer failover
 - Verify cache replication
@@ -469,6 +476,7 @@ grafana-cli import monitoring/grafana-dashboard.json
 ### SOC 2 Type II
 
 **Required controls**:
+
 - Access logging
 - Change management
 - Incident response procedures
@@ -478,6 +486,7 @@ grafana-cli import monitoring/grafana-dashboard.json
 ### GDPR
 
 **Data handling**:
+
 - Data minimization
 - Right to deletion
 - Data portability
@@ -487,6 +496,7 @@ grafana-cli import monitoring/grafana-dashboard.json
 ### PCI DSS (if handling payment data)
 
 **Requirements**:
+
 - Encryption of payment data
 - Secure authentication
 - Regular vulnerability scanning
@@ -527,11 +537,11 @@ grafana-cli import monitoring/grafana-dashboard.json
 
 ### SLA Guidelines
 
-| Tier | Uptime | Response Time | Resolution Time |
+|Tier|Uptime|Response Time|Resolution Time|
 |------|--------|---------------|-----------------|
-| Basic | 99.5% | 24 hours | 72 hours |
-| Standard | 99.9% | 4 hours | 24 hours |
-| Premium | 99.95% | 1 hour | 4 hours |
+|Basic|99.5%|24 hours|72 hours|
+|Standard|99.9%|4 hours|24 hours|
+|Premium|99.95%|1 hour|4 hours|
 
 ### Maintenance Windows
 
@@ -552,12 +562,12 @@ grafana-cli import monitoring/grafana-dashboard.json
 
 **Estimated monthly costs** (US-East):
 
-| Configuration | Monthly Cost |
+|Configuration|Monthly Cost|
 |--------------|--------------|
-| 2x t3.medium + RDS | $150 |
-| 3x m5.large + ElastiCache | $400 |
-| 5x c5.2xlarge + GPU | $1,200 |
-| Multi-region enterprise | $5,000+ |
+|2x t3.medium + RDS|$150|
+|3x m5.large + ElastiCache|$400|
+|5x c5.2xlarge + GPU|$1,200|
+|Multi-region enterprise|$5,000+|
 
 ### Cost Reduction Strategies
 
@@ -572,18 +582,21 @@ grafana-cli import monitoring/grafana-dashboard.json
 ### Common Issues
 
 **High latency**:
+
 - Check cache hit rate
 - Verify database query performance
 - Monitor GPU utilization (if using Ollama)
 - Check network latency to cloud APIs
 
 **Payment verification failures**:
+
 - Verify facilitator URL accessibility
 - Check wallet address format
 - Verify network configuration (Base vs Solana)
 - Check facilitator service status
 
 **High memory usage**:
+
 - Monitor cache size
 - Check for memory leaks
 - Verify connection pooling
