@@ -234,13 +234,13 @@ logger.error("payment_verification_failed",
 
 ### Log Levels
 
-| Level | Usage | Example |
-|-------|-------|---------|
-| DEBUG | Detailed diagnostics | Cache key computation, routing decisions |
-| INFO | Normal operations | Request processed, payment verified |
-| WARNING | Potentially harmful | High latency, cache miss rate high |
-| ERROR | Errors but service continues | Payment verification failed, backend error |
-| CRITICAL | Service may be unavailable | Database connection lost, OOM |
+|Level|Usage|Example|
+|-----|-----|-------|
+|DEBUG|Detailed diagnostics|Cache key computation, routing decisions|
+|INFO|Normal operations|Request processed, payment verified|
+|WARNING|Potentially harmful|High latency, cache miss rate high|
+|ERROR|Errors but service continues|Payment verification failed, backend error|
+|CRITICAL|Service may be unavailable|Database connection lost, OOM|
 
 ### Log Aggregation
 
@@ -354,7 +354,7 @@ async def process_request(request_id: str):
 
 ### Distributed Tracing Architecture
 
-```
+```text
 ┌─────────────┐
 │   Client    │
 └──────┬──────┘
@@ -493,11 +493,11 @@ receivers:
 
 ### Alert Severity Levels
 
-| Severity | Response Time | Notification Channels |
-|----------|---------------|---------------------|
-| Critical | 15 minutes | PagerDuty, Slack, SMS |
-| Warning | 1 hour | Slack, Email |
-| Info | 24 hours | Email |
+|Severity|Response Time|Notification Channels|
+|--------|--------------|---------------------|
+|Critical|15 minutes|PagerDuty, Slack, SMS|
+|Warning|1 hour|Slack, Email|
+|Info|24 hours|Email|
 
 ## Dashboards
 
@@ -643,15 +643,15 @@ fetch('/api/metrics', {
 
 ### Key Performance Indicators (KPIs)
 
-| KPI | Formula | Target |
-|-----|---------|--------|
-| **Request Success Rate** | Successful requests / Total requests | > 99.5% |
-| **Average Latency** | Sum of latencies / Request count | < 100ms |
-| **Cache Hit Rate** | Cache hits / (Cache hits + misses) | > 40% |
-| **Engine Handle Rate** | Engine requests / Total requests | > 80% |
-| **Payment Success Rate** | Successful payments / Total payments | > 99% |
-| **Cost per 1K Requests** | Total cost / (Requests / 1000) | < $0.50 |
-| **Data Center Avoidance** | Non-cloud requests / Total requests | > 90% |
+|KPI|Formula|Target|
+|---|--------|-------|
+|**Request Success Rate**|Successful requests / Total requests|> 99.5%|
+|**Average Latency**|Sum of latencies / Request count|< 100ms|
+|**Cache Hit Rate**|Cache hits / (Cache hits + misses)|> 40%|
+|**Engine Handle Rate**|Engine requests / Total requests|> 80%|
+|**Payment Success Rate**|Successful payments / Total payments|> 99%|
+|**Cost per 1K Requests**|Total cost / (Requests / 1000)|< $0.50|
+|**Data Center Avoidance**|Non-cloud requests / Total requests|> 90%|
 
 ### Revenue Metrics
 
