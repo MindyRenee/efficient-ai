@@ -97,6 +97,7 @@ class Telemetry:
         try:
             yield conn
         finally:
+            conn.commit()
             conn.close()
 
     def record(self, record: RequestRecord) -> None:

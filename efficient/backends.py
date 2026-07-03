@@ -134,10 +134,6 @@ class OllamaBackend(Backend):
         if tools:
             payload["tools"] = tools
 
-        # Speculative decoding hint (Ollama handles this if a draft model is configured)
-        if model.supports_speculative and model.draft_model:
-            payload["options"]["draft_model"] = model.draft_model
-
         payload.update(kwargs)
 
         resp = self._http.post(f"{self.host}/api/chat", json=payload)

@@ -308,10 +308,11 @@ class Client:
                 )
 
         try:
-            # Pass intent/complexity to engine backend for dispatch
+            # Pass intent/complexity to engine backend for dispatch only
+            engine_kwargs = kwargs.copy()
             if decision.model.provider == "engine":
-                kwargs["_intent"] = decision.intent
-                kwargs["_complexity"] = decision.complexity
+                engine_kwargs["_intent"] = decision.intent
+                engine_kwargs["_complexity"] = decision.complexity
             result = backend.chat(
                 model=decision.model,
                 messages=messages,
@@ -319,7 +320,7 @@ class Client:
                 max_tokens=max_tokens,
                 tools=tools,
                 response_format=response_format,
-                **kwargs,
+                **engine_kwargs,
             )
         except Exception as e:
             logger.warning(
@@ -433,7 +434,7 @@ class Client:
         )
 
         # 3. Store in cache
-        if self.cache is not None and decision.use_cache and response.content:
+        if self.cache is not None and decision.use_cache and response.content is not None:
             self.cache.put(
                 query=self._messages_to_query(messages),
                 response=response.content,
@@ -534,9 +535,10 @@ class Client:
         return self.backends.get(provider)
 
     def _fallback_backend(self) -> Backend | None:
-        """Get any available backend as fallback."""
-        for backend in self.backends.values():
-            if backend.is_available():
+        """Get any available backend as fallback. Prefer Ollama over engine."""
+        for provider in ("ollama", "openai", "groq", "openrouter", "engine"):
+            backend = self.backends.get(provider)
+            if backend and backend.is_available():
                 return backend
         return None
 
@@ -569,9 +571,9 @@ class Client:
             if m.tier >= engine_decision.tier:
                 if vram_gb > 0 and m.vram_required_gb > vram_gb:
                     continue
-                # Check if model is installed
+                # Check if model is installed (exact name match, not just prefix)
                 installed = any(
-                    m.name in name or name.startswith(m.name.split(":")[0])
+                    m.name in name
                     for name in self.config.ollama.models
                 )
                 if installed:
@@ -691,6 +693,13 @@ class Client:
             decision = self.router.route(
                 messages,
                 require_tools=tools is not None,
+                require_vision=any(
+                    isinstance(m.get("content"), list)
+                    and any(
+                        p.get("type") == "image_url" for p in m["content"] if isinstance(p, dict)
+                    )
+                    for m in messages
+                ),
                 require_json=response_format is not None,
             )
         else:
@@ -727,10 +736,17 @@ class Client:
         content = "".join(chunks)
         latency_ms = (time.time() - start) * 1000
 
+        # Estimate tokens from content (streaming doesn't return token counts)
+        input_text = self._messages_to_query(messages)
+        estimated_input = max(1, len(input_text.split()) * 4 // 3)
+        estimated_output = max(1, len(content.split()) * 4 // 3)
+
         response = ChatResponse(
             content=content,
             model=decision.model.name,
             provider=decision.model.provider,
+            input_tokens=estimated_input,
+            output_tokens=estimated_output,
             latency_ms=latency_ms,
             local=decision.model.is_local,
             intent=decision.intent,
@@ -738,7 +754,7 @@ class Client:
         )
 
         # Record telemetry for the collected stream
-        self._record_telemetry(response, decision, input_tokens=0, output_tokens=0)
+        self._record_telemetry(response, decision, estimated_input, estimated_output)
         return response
 
 

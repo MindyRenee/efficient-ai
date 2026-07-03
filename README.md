@@ -20,7 +20,7 @@ The "just use OpenAI" default works for prototyping. It is a brute-force solutio
 A self-hosted proxy that speaks OpenAI's API. Your existing clients can't tell the difference.
 
 | Layer | What It Does | Impact |
-|---|---|---|
+| --- | --- | --- |
 | **Embedded engine** | Handles text processing deterministically — no LLM needed | 80% of queries, $0, <1ms |
 | **Semantic caching** | Serves identical/similar queries from local cache | 30-50% of paid requests eliminated |
 | **Intent routing** | Escalates only complex tasks to paid backends | 45-85% cost reduction |
@@ -35,7 +35,7 @@ A self-hosted proxy that speaks OpenAI's API. Your existing clients can't tell t
 Most "AI" requests don't need a neural network at all. They are not insults. They are real work. But they are not deep work. They are not the kind of work that needs 175 billion parameters, a thousand H100s, and a cooling tower in Virginia.
 
 | Task | Algorithm | Era | Avoids LLM? |
-|------|-----------|-----|-------------|
+| ------ | ----------- | ----- | ------------- |
 | Summarization | TF-IDF sentence scoring | 1950s | Yes |
 | Classification | Naive Bayes + keyword matching | 1960s | Yes |
 | Entity extraction | Regex patterns | 1970s | Yes |
@@ -230,23 +230,23 @@ Period: last 24h
 
 ### Local Models (Ollama — $0/token)
 
-|Model|Params|VRAM (Q4)|MMLU|Tier|Speculative|
-|---|---|---|---|---|---|
-|phi3:mini|3.8B|2.3 GB|68|MICRO|—|
-|qwen2.5:7b|7B|4.5 GB|74|SMALL|✓|
-|llama3.1:8b|8B|5.0 GB|73|SMALL|—|
-|qwen2.5:14b|14B|9.0 GB|79|MID|✓|
-|qwen2.5:32b|32B|20 GB|83.2|MID|✓|
-|llama3.3:70b|70B|40 GB|83.1|LARGE|—|
+| Model | Params | VRAM (Q4) | MMLU | Tier | Speculative |
+| --- | --- | --- | --- | --- | --- |
+| phi3:mini | 3.8B | 2.3 GB | 68 | MICRO | — |
+| qwen2.5:7b | 7B | 4.5 GB | 74 | SMALL | ✓ |
+| llama3.1:8b | 8B | 5.0 GB | 73 | SMALL | — |
+| qwen2.5:14b | 14B | 9.0 GB | 79 | MID | ✓ |
+| qwen2.5:32b | 32B | 20 GB | 83.2 | MID | ✓ |
+| llama3.3:70b | 70B | 40 GB | 83.1 | LARGE | — |
 
 ### Cloud Models (priced per million tokens)
 
-|Model|Input $/M|Output $/M|MMLU|Tier|
-|---|---|---|---|---|
-|gpt-4o-mini|$0.15|$0.60|82|SMALL|
-|deepseek-v4-flash|$0.14|$0.28|80|MID|
-|gpt-4o|$2.50|$10.00|88|LARGE|
-|gpt-5|$5.00|$15.00|90|FRONTIER|
+| Model | Input $/M | Output $/M | MMLU | Tier |
+| --- | --- | --- | --- | --- |
+| gpt-4o-mini | $0.15 | $0.60 | 82 | SMALL |
+| deepseek-v4-flash | $0.14 | $0.28 | 80 | MID |
+| gpt-4o | $2.50 | $10.00 | 88 | LARGE |
+| gpt-5 | $5.00 | $15.00 | 90 | FRONTIER |
 
 ## Configuration
 

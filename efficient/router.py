@@ -35,6 +35,18 @@ from efficient.models import (
     local_models,
 )
 
+# Cached LocalEngine singleton (stateless, safe to reuse)
+_local_engine_instance = None
+
+
+def _get_local_engine():
+    """Return a cached LocalEngine instance."""
+    global _local_engine_instance
+    if _local_engine_instance is None:
+        from efficient.local_engine import LocalEngine
+        _local_engine_instance = LocalEngine()
+    return _local_engine_instance
+
 
 @dataclass
 class RoutingDecision:
@@ -174,7 +186,7 @@ def estimate_complexity(messages: list[dict]) -> str:
         return "trivial"
     if total_words < 50 and msg_count <= 3:
         return "simple"
-    if total_words < 500 or (msg_count <= 5 and not has_multi_step):
+    if total_words < 500 and msg_count <= 5 and not has_multi_step:
         return "moderate"
     return "complex"
 
@@ -282,20 +294,22 @@ def select_model(
     #    It handles: summarization, classification, extraction, simple_qa,
     #    code_completion, structured_generation at trivial/simple complexity.
     if local_first and not require_vision and not require_tools:
-        from efficient.local_engine import LocalEngine
+        from efficient.models import _ENGINE_MODEL
 
-        engine = LocalEngine()
-        if engine.can_handle(intent, complexity):
-            from efficient.models import _ENGINE_MODEL
-
-            return RoutingDecision(
-                intent=intent,
-                complexity=complexity,
-                tier=tier,
-                model=_ENGINE_MODEL,
-                reason=f"Embedded engine can handle '{intent}' at '{complexity}' complexity (0ms, $0)",
-                use_cache=True,
-            )
+        try:
+            engine = _get_local_engine()
+            if engine.can_handle(intent, complexity):
+                return RoutingDecision(
+                    intent=intent,
+                    complexity=complexity,
+                    tier=tier,
+                    model=_ENGINE_MODEL,
+                    reason=f"Embedded engine can handle '{intent}' at '{complexity}' complexity (0ms, $0)",
+                    use_cache=True,
+                )
+        except Exception:
+            # Engine check failed — safely fall through to model routing
+            pass
 
     # Filter local models by availability and requirements
     local_candidates = []
@@ -353,7 +367,7 @@ def select_model(
     for m in cloud_models():
         if m.tier < tier:
             continue
-        if available_providers and m.provider not in available_providers:
+        if m.provider not in available_providers:
             continue
         if require_tools and not m.supports_tools:
             continue
@@ -387,17 +401,18 @@ def select_model(
             use_cache=True,
         )
 
-    # Last resort: fallback cloud model
-    fallback = get_model(fallback_cloud)
-    if fallback:
-        return RoutingDecision(
-            intent=intent,
-            complexity=complexity,
-            tier=tier,
-            model=fallback,
-            reason=f"Fallback cloud model '{fallback.name}' — no optimal match found",
-            use_cache=True,
-        )
+    # Last resort: fallback cloud model (only if cloud providers are configured)
+    if available_providers:
+        fallback = get_model(fallback_cloud)
+        if fallback:
+            return RoutingDecision(
+                intent=intent,
+                complexity=complexity,
+                tier=tier,
+                model=fallback,
+                reason=f"Fallback cloud model '{fallback.name}' — no optimal match found",
+                use_cache=True,
+            )
 
     # Absolute last resort: first local model
     if local_models():
@@ -411,7 +426,17 @@ def select_model(
             use_cache=True,
         )
 
-    raise RuntimeError("No models available for routing")
+    # Final fallback: embedded engine (always available, $0, <1ms)
+    from efficient.models import _ENGINE_MODEL
+
+    return RoutingDecision(
+        intent=intent,
+        complexity=complexity,
+        tier=tier,
+        model=_ENGINE_MODEL,
+        reason="Emergency fallback to embedded engine — no other backends available",
+        use_cache=True,
+    )
 
 
 class Router:

@@ -51,3 +51,7 @@ Thumbs.db
 # Project specific
 *.log
 .wallet_private_key
+
+# Node.js (agent/)
+node_modules/
+agent/logs/

@@ -107,6 +107,7 @@ class SemanticCache:
         try:
             yield conn
         finally:
+            conn.commit()
             conn.close()
 
     # ─── Embedding ─────────────────────────────────────────────────────────
@@ -198,6 +199,9 @@ class SemanticCache:
                     continue
 
                 cached_emb = np.frombuffer(row["embedding"], dtype=np.float32)
+                # Skip entries with mismatched embedding dimensions
+                if cached_emb.shape[0] != query_embedding.shape[0]:
+                    continue
                 score = self._cosine_similarity(query_embedding, cached_emb)
 
                 if score > best_score:
@@ -236,11 +240,17 @@ class SemanticCache:
         embedding = self._get_embedding(query)
 
         with self._conn() as conn:
+            # Preserve existing hit_count if this query is already cached
+            existing = conn.execute(
+                "SELECT hit_count FROM cache WHERE query_hash = ?", (query_hash,)
+            ).fetchone()
+            hit_count = existing["hit_count"] if existing else 0
+
             # Upsert (replace if exists)
             conn.execute(
                 """INSERT OR REPLACE INTO cache
                    (query_hash, query_text, response, embedding, model, timestamp, intent, hit_count, last_accessed)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)""",
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     query_hash,
                     query,
@@ -249,6 +259,7 @@ class SemanticCache:
                     model,
                     time.time(),
                     intent,
+                    hit_count,
                     time.time(),
                 ),
             )

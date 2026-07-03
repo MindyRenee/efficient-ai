@@ -1996,17 +1996,20 @@ class LocalEngine:
         # Can handle trivial reasoning (arithmetic, algebra)
         if complexity == "trivial" and intent == "reasoning":
             return True
-        # Can handle trivial and simple for most intents
-        if complexity in ("trivial", "simple"):
+        # Can handle trivial and simple for most intents (but not creative)
+        if complexity in ("trivial", "simple") and intent != "creative":
             return True
         # Can handle moderate for classification, extraction, summarization, simple_qa
-        return complexity == "moderate" and intent in (
+        if complexity == "moderate" and intent in (
             "classification",
             "extraction",
             "summarization",
             "simple_qa",
             "structured_generation",
-        )
+        ):
+            return True
+        # Last resort: handle unknown intent at any complexity
+        return intent == "unknown"
 
     def generate(
         self,
@@ -2353,6 +2356,13 @@ class LocalEngine:
             if keywords:
                 return f"Key topics: {', '.join(keywords)}"
 
+        # Best-effort: extractive summary of the user's message
+        if _word_count(text) > 10:
+            summary = _summarize_extractive(text, max_sentences=2)
+            if summary:
+                return summary
+
+        # Can't handle — return None to trigger Ollama/cloud fallback
         return None
 
     # ─── Helpers ───────────────────────────────────────────────────────────

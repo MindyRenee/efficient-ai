@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Agent Monitor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+    header h1 { font-size: 2em; margin-bottom: 10px; }
+    .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; font-weight: 600; }
+    .status-running { background: #22c55e; color: white; }
+    .status-stopped { background: #ef4444; color: white; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .card { background: #1e293b; border-radius: 10px; padding: 20px; border: 1px solid #334155; }
+    .card h3 { color: #8b5cf6; margin-bottom: 15px; font-size: 1.2em; }
+    .stat { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #334155; }
+    .stat:last-child { border-bottom: none; }
+    .stat-label { color: #94a3b8; }
+    .stat-value { font-weight: 600; color: #e2e8f0; }
+    .file-list { max-height: 300px; overflow-y: auto; }
+    .file-item { padding: 10px; border-bottom: 1px solid #334155; cursor: pointer; transition: background 0.2s; }
+    .file-item:hover { background: #334155; }
+    .file-item:last-child { border-bottom: none; }
+    .file-name { font-weight: 600; color: #e2e8f0; }
+    .file-meta { font-size: 0.85em; color: #94a3b8; margin-top: 5px; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; background: #1e293b; border: 1px solid #334155; border-radius: 5px; cursor: pointer; transition: all 0.2s; }
+    .tab.active { background: #6366f1; border-color: #6366f1; }
+    .tab:hover:not(.active) { background: #334155; }
+    .content-area { background: #1e293b; border-radius: 10px; padding: 20px; border: 1px solid #334155; min-height: 400px; }
+    .markdown-content { line-height: 1.8; }
+    .markdown-content h1, .markdown-content h2, .markdown-content h3 { color: #8b5cf6; margin: 20px 0 10px; }
+    .markdown-content p { margin-bottom: 15px; }
+    .markdown-content ul, .markdown-content ol { margin-left: 20px; margin-bottom: 15px; }
+    .markdown-content code { background: #0f172a; padding: 2px 6px; border-radius: 3px; }
+    .markdown-content pre { background: #0f172a; padding: 15px; border-radius: 5px; overflow-x: auto; margin-bottom: 15px; }
+    .loading { text-align: center; padding: 40px; color: #94a3b8; }
+    .error { color: #ef4444; text-align: center; padding: 20px; }
+    .refresh-btn { background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+    .refresh-btn:hover { background: #8b5cf6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🤖 Markdown Agent Monitor</h1>
+      <div>
+        <span id="status-badge" class="status-badge status-stopped">Stopped</span>
+        <button class="refresh-btn" onclick="refreshStatus()">Refresh</button>
+      </div>
+    </header>
+    
+    <div class="grid">
+      <div class="card">
+        <h3>📊 Agent Status</h3>
+        <div class="stat">
+          <span class="stat-label">Current Phase</span>
+          <span class="stat-value" id="current-phase">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Last Action</span>
+          <span class="stat-value" id="last-action">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Last Updated</span>
+          <span class="stat-value" id="last-updated">-</span>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>🧠 Brain Files</h3>
+        <div class="stat">
+          <span class="stat-label">Total Files</span>
+          <span class="stat-value" id="brain-count">-</span>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>💾 Memory Files</h3>
+        <div class="stat">
+          <span class="stat-label">Total Files</span>
+          <span class="stat-value" id="memory-count">-</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚡ Efficient AI</h3>
+        <div class="stat">
+          <span class="stat-label">Connection</span>
+          <span class="stat-value" id="efficient-status">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Last Provider</span>
+          <span class="stat-value" id="last-provider">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Last Cost</span>
+          <span class="stat-value" id="last-cost">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Total Savings</span>
+          <span class="stat-value" id="total-savings">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Cache Hits</span>
+          <span class="stat-value" id="cache-hits">-</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('brain', event)">🧠 Brain</div>
+      <div class="tab" onclick="switchTab('memory', event)">💾 Memory</div>
+      <div class="tab" onclick="switchTab('telemetry', event)">📈 Telemetry</div>
+    </div>
+    
+    <div class="content-area">
+      <div id="file-list" class="file-list"></div>
+      <div id="file-content" class="markdown-content" style="display: none;"></div>
+    </div>
+  </div>
+  
+  <script>
+    let currentTab = 'brain';
+    let currentFile = null;
+    
+    async function refreshStatus() {
+      try {
+        const [statusRes, efficientRes, telemetryRes] = await Promise.all([
+          fetch('/api/status').catch(() => null),
+          fetch('/api/efficient/status').catch(() => null),
+          fetch('/api/efficient/telemetry').catch(() => null)
+        ]);
+
+        const data = statusRes ? await statusRes.json() : {};
+        const efficient = efficientRes ? await efficientRes.json() : {};
+        const telemetry = telemetryRes ? await telemetryRes.json() : { entries: [] };
+
+        const badge = document.getElementById('status-badge');
+        if (data.agent_running) {
+          badge.textContent = 'Running';
+          badge.className = 'status-badge status-running';
+        } else {
+          badge.textContent = 'Stopped';
+          badge.className = 'status-badge status-stopped';
+        }
+
+        document.getElementById('current-phase').textContent = data.current_state?.phase || '-';
+        document.getElementById('last-action').textContent = data.current_state?.last_action || '-';
+        document.getElementById('last-updated').textContent = data.current_state?.last_updated ? new Date(data.current_state.last_updated).toLocaleString() : '-';
+        document.getElementById('brain-count').textContent = data.brain_files || '-';
+        document.getElementById('memory-count').textContent = data.memory_files || '-';
+
+        document.getElementById('efficient-status').textContent = efficient.connected ? 'Connected' : 'Disconnected';
+        document.getElementById('efficient-status').style.color = efficient.connected ? '#22c55e' : '#ef4444';
+
+        const entries = telemetry.entries || [];
+        const last = entries[entries.length - 1] || {};
+        document.getElementById('last-provider').textContent = last.provider || '-';
+        document.getElementById('last-cost').textContent = last.cost !== undefined ? `$${last.cost.toFixed(4)}` : '-';
+        const totalSavings = entries.reduce((s, e) => s + (e.savings || 0), 0);
+        document.getElementById('total-savings').textContent = `$${totalSavings.toFixed(4)}`;
+        const cacheHits = entries.filter(e => e.cache_hit).length;
+        document.getElementById('cache-hits').textContent = entries.length ? `${cacheHits}/${entries.length} (${((cacheHits / entries.length) * 100).toFixed(0)}%)` : '-';
+
+        loadFileList();
+      } catch (error) {
+        console.error('Failed to refresh status:', error);
+      }
+    }
+    
+    async function loadFileList() {
+      const fileList = document.getElementById('file-list');
+      fileList.innerHTML = '';
+
+      if (currentTab === 'telemetry') {
+        try {
+          const response = await fetch('/api/efficient/telemetry');
+          const data = await response.json();
+          const entries = data.entries || [];
+          if (!entries.length) {
+            fileList.innerHTML = '<div class="loading">No telemetry data yet</div>';
+          } else {
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.innerHTML = `<tr style="border-bottom:1px solid #334155">
+              <th style="text-align:left;padding:8px;color:#8b5cf6">Time</th>
+              <th style="text-align:left;padding:8px;color:#8b5cf6">Provider</th>
+              <th style="text-align:left;padding:8px;color:#8b5cf6">Model</th>
+              <th style="text-align:right;padding:8px;color:#8b5cf6">Cost</th>
+              <th style="text-align:right;padding:8px;color:#8b5cf6">Savings</th>
+              <th style="text-align:center;padding:8px;color:#8b5cf6">Cache</th>
+            </tr>`;
+            [...entries].reverse().forEach(e => {
+              const row = document.createElement('tr');
+              row.style.borderBottom = '1px solid #334155';
+              const cells = [
+                new Date(e.timestamp).toLocaleTimeString(),
+                e.provider || '-',
+                e.model || '-',
+                `$${(e.cost || 0).toFixed(4)}`,
+                `$${(e.savings || 0).toFixed(4)}`,
+                e.cache_hit ? '✅' : '❌'
+              ];
+              const aligns = ['', '', '', 'right', 'right', 'center'];
+              const colors = ['', '', '', '', '#22c55e', ''];
+              cells.forEach((val, i) => {
+                const td = document.createElement('td');
+                td.style.padding = '8px';
+                if (aligns[i]) td.style.textAlign = aligns[i];
+                if (colors[i]) td.style.color = colors[i];
+                td.textContent = val;
+                row.appendChild(td);
+              });
+              table.appendChild(row);
+            });
+            fileList.appendChild(table);
+          }
+          document.getElementById('file-list').style.display = 'block';
+          document.getElementById('file-content').style.display = 'none';
+        } catch (error) {
+          fileList.innerHTML = '<div class="error">Failed to load telemetry</div>';
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/${currentTab}`);
+        const files = await response.json();
+
+        files.forEach(file => {
+          const item = document.createElement('div');
+          item.className = 'file-item';
+          const nameDiv = document.createElement('div');
+          nameDiv.className = 'file-name';
+          nameDiv.textContent = file.name;
+          const metaDiv = document.createElement('div');
+          metaDiv.className = 'file-meta';
+          metaDiv.textContent = `${Object.keys(file.metadata || {}).length} metadata fields`;
+          item.appendChild(nameDiv);
+          item.appendChild(metaDiv);
+          item.onclick = () => loadFileContent(file.name);
+          fileList.appendChild(item);
+        });
+
+        document.getElementById('file-list').style.display = 'block';
+        document.getElementById('file-content').style.display = 'none';
+      } catch (error) {
+        fileList.innerHTML = '<div class="error">Failed to load files</div>';
+      }
+    }
+    
+    async function loadFileContent(fileName) {
+      try {
+        const response = await fetch(`/api/${currentTab}/${fileName}`);
+        const data = await response.json();
+        
+        const content = document.getElementById('file-content');
+        const heading = document.createElement('h2');
+        heading.textContent = fileName;
+        const body = document.createElement('div');
+        body.className = 'markdown-content';
+        body.innerHTML = formatMarkdown(data.content);
+        content.innerHTML = '';
+        content.appendChild(heading);
+        content.appendChild(body);
+        
+        document.getElementById('file-list').style.display = 'none';
+        document.getElementById('file-content').style.display = 'block';
+        currentFile = fileName;
+      } catch (error) {
+        alert('Failed to load file content');
+      }
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      const escaped = escapeHtml(text);
+      return escaped
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+        .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+        .replace(/`([^`]+)`/gim, '<code>$1</code>')
+        .replace(/\n/gim, '<br>');
+    }
+    
+    function switchTab(tab, event) {
+      currentTab = tab;
+      currentFile = null;
+      
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      
+      loadFileList();
+    }
+    
+    // Initial load
+    refreshStatus();
+    setInterval(refreshStatus, 30000); // Refresh every 30 seconds
+  </script>
+</body>
+</html>

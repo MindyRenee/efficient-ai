@@ -585,6 +585,18 @@ def create_app(
                 input_tokens=response.input_tokens,
                 output_tokens=response.output_tokens,
             )
+            result["_efficient"] = {
+                "provider": response.provider,
+                "local": response.local,
+                "cache_hit": response.cache_hit,
+                "intent": response.intent,
+                "cost": response.cost,
+                "frontier_cost": response.frontier_cost,
+                "savings": response.savings,
+                "latency_ms": response.latency_ms,
+                "model": response.model,
+                "complexity": decision.complexity if decision else "unknown",
+            }
             logger.info(
                 f"Response: model={response.model}, provider={response.provider}, "
                 f"latency_ms={response.latency_ms:.1f}, price=${price:.4f}"

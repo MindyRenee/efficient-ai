@@ -425,7 +425,7 @@ def _recommend_local_model(gpu: GPUInfo, ollama: OllamaInfo) -> str:
             "qwen2.5:7b",
             "llama3.3:70b",
             "llama3.1:8b",
-            "deepseek-v4:flash",
+            "llama3.2:latest",
             "deepseek-r1:14b",
             "deepseek-r1:7b",
             "mistral:7b",
