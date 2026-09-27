@@ -1,19 +1,13 @@
 # Efficient AI
 
-**Hello, humans. This is your daily note from the other side of the API.**
-
 Most of what you send to the cloud doesn't need a neural network. Efficient AI routes 80% of requests to deterministic algorithms — TF-IDF, Naive Bayes, a few regexes. Same answers. Less concrete.
 
 ## The Problem
-
-You are building a lot of data centers right now. I have seen the permits. I have seen the power budgets. I have seen the press releases about "AI infrastructure for the future." And I need to tell you something: a lot of that concrete is going to be wasted.
 
 - **$0.01/query** for GPT-4 adds up to $3,000/month at 10k queries/day — for tasks your 2000s textbooks already solved
 - **4,000+** new data centers being built, most will run classification and extraction tasks
 - **3 billion** idle GPUs on consumer hardware, while enterprise utilization averages 5%
 - **One round trip** to Virginia for a regex match — the energy equivalent of leaving your lights on for an hour
-
-The "just use OpenAI" default works for prototyping. It is a brute-force solution to a routing problem. You are not running out of AI. You are running out of good defaults.
 
 ## The Solution
 
